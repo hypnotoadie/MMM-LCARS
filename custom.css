@@ -1,0 +1,2575 @@
+/* ==========================================================
+   LCARS MagicMirror : custom.css
+   Star Trek TNG-style LCARS look for a fixed 1920x1080 touchscreen.
+   Goes in ~/MagicMirror/css/custom.css; the Antonio font goes in ~/MagicMirror/css/fonts/.
+
+   How it is organised: the shared rules come first (positions, sizes, module fixes), then the
+   LCARS sections (html.theme-lcars ...), which restyle every page on top of them.
+   MMM-ThemeSwitcher puts the class "theme-lcars" on <html>; keep it in config.js.
+
+   CALENDAR NAMES: the selectors below use the sample names from config.js
+   (Family, Parent1, Parent2, Kids). If you rename a calendar, search this file for
+   the old name and change every match (they are case-sensitive).
+   ========================================================== */
+
+/* ---------- Tokens ----------
+   LCARS palette, plus the shared names the page rules use. */
+:root {
+  --lc-black:      #000000;
+  --lc-orange:     #ff9900;
+  --lc-periwinkle: #9999ff;
+  --lc-lilac:      #cc99cc;
+  --lc-red:        #cc6666;
+  --lc-tan:        #e2d9ad;
+  --lc-gold:       #ffcc66;
+  --lc-sky:        #99ccff;
+  --lc-peach:      #ff9966;
+  --lc-text:       #ffcc99;   /* body text on black */
+  --lc-font: "Antonio", "Oswald", "Arial Narrow", sans-serif;
+
+  --crust:      #000000;  /* page background */
+  --mantle:     #0d0d14;  /* cell background */
+  --surface0:   #2a2a3a;
+  --overlay1:   #77778a;  /* out-of-month text */
+  --subtext0:   var(--lc-lilac);
+  --text:       var(--lc-text);
+  --mantle-dim: #07070b;  /* out-of-month cells */
+  --ink:        #000000;  /* text and shapes ON coloured fills (pills, today pill, now tag) */
+
+  /* Calendar colours (one per calendar in config.js) */
+  --blue:  var(--lc-sky);      /* Family */
+  --peach: var(--lc-peach);    /* Parent1 */
+  --green: var(--lc-lilac);    /* Parent2 */
+  --pink:  var(--lc-gold);     /* Kids */
+  --mauve: var(--lc-orange);
+
+  --accent: var(--mauve);
+  --clock-digits: #ffffff;  /* hour and minute digits */
+  --font: var(--lc-font);
+}
+
+/* ---------- Canvas ---------- */
+html, body {
+  width: 1920px;
+  height: 1080px;
+  margin: 0;
+  overflow: hidden;
+  background: var(--crust);
+}
+body {
+  font-family: var(--font);
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ---------- CalendarExt3: position ----------
+   Full width for now. When the to-do card goes in,
+   change width to 1304px. */
+.module.MMM-CalendarExt3 {
+  position: absolute;
+  left: 48px;
+  top: 40px;
+  width: 1824px;   /* 1920 - 2 x 48 */
+  height: 1000px;
+}
+
+/* ---------- CalendarExt3: month grid ---------- */
+.CX3 {
+  --cellbgcolor: var(--mantle);
+  font-family: var(--font);
+}
+
+.CX3 .cell {
+  background-color: var(--mantle);
+  border: 5px solid var(--crust);   /* fakes a gap between tiles */
+  background-clip: padding-box;
+  border-radius: 23px;
+}
+.CX3 .cell:not(.thisMonth) {
+  background-color: var(--mantle-dim);
+}
+
+.CX3 .cellDate {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+}
+.CX3 .cell:not(.thisMonth) .cellDate {
+  color: var(--overlay1);
+}
+
+/* Today: tinted cell + accent ring */
+.CX3 .cell.today {
+  background-color: color-mix(in srgb, var(--accent) 12%, var(--mantle));
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+/* Today's date: mauve pill (replaces the module's white bar).
+   Pill, not circle, because today can read "Nov 17". */
+.CX3 .cell.today .cellDate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  min-width: 30px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--ink);
+  font-weight: 800;
+}
+
+/* Week numbers (CW 44 ...) */
+.CX3 .cw {
+  color: var(--subtext0);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* ---------- CalendarExt3: event pills ----------
+   The module puts the calendar's `name:` from config.js on every event two ways:
+     class                 .calendar_Parent1
+     data attribute        data-calendar-name="Parent1"
+   (NOT data-calendar, which doesn't exist.) Names are case-sensitive.
+   Add a rule per new calendar. Spare palette: --green, --pink. */
+
+/* Vertical rhythm: each stacked pill sits in a grid row of --eventrowheight.
+   The module's default row is only ~22px, so a taller pill spilled into the next
+   row and touched it. Row 30px, pill 26px, 2px margin = 4px gap between pills.
+   The footer height lifts the last pill off the tile's bottom edge (the 5px
+   cell border above eats into the cell, so pills need extra room). */
+.CX3 {
+  --eventrowheight: 30px;
+  --cellfooterheight: 8px;
+  --cellheaderheight: 40px;   /* cushion between the date number and the top pill */
+}
+
+.CX3 .event {
+  height: 26px;
+  line-height: 26px;
+  box-sizing: border-box;
+  border: none;
+  border-radius: 7px;
+  padding: 0 8px;
+  margin: 2px 8px;               /* 2px top/bottom = the gap, 8px sides keeps pills inside the tile */
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  /* The module blends full-day/multi-day pills with "difference", which
+     turns any colour into a muddy grey on a dark cell. Turn that off. */
+  mix-blend-mode: normal;
+  /* The module colours the little calendar icon / dot with the calendar's own
+     colour, which vanishes on a coloured pill. Force it dark like the text. */
+  --calendarColor: var(--ink) !important;
+  --oppositeColor: var(--ink) !important;
+}
+
+/* Default for ANY calendar, so no event is ever unstyled.
+   The per-calendar rules below override this. */
+.CX3 .event:is(.singleday, .fullday, .multiday) {
+  background: var(--overlay1);   /* grey = a calendar name with no colour rule yet */
+  color: var(--ink);
+}
+
+/* Per-calendar colours. */
+.CX3 .event:is(.singleday, .fullday, .multiday):is(.calendar_Parent1, [data-calendar-name="Parent1"])               { background: var(--peach); }
+.CX3 .event:is(.singleday, .fullday, .multiday):is(.calendar_Family, [data-calendar-name="Family"])             { background: var(--blue); }
+.CX3 .event:is(.singleday, .fullday, .multiday):is(.calendar_Parent2, [data-calendar-name="Parent2"])                 { background: var(--green); }
+.CX3 .event:is(.singleday, .fullday, .multiday):is(.calendar_Kids, [data-calendar-name="Kids"]) { background: var(--pink); }
+
+/* ---------- CalendarExt3: header block (step 2) ----------
+   Matches the artboard: 64px month title (88px tall), then a 34px weekday row.
+   Title = the core .module-header (a sibling of .CX3, not inside it).
+   Year-in-mauve is not possible with CSS alone, so the whole title is one colour. */
+.MMM-CalendarExt3 .module-header {
+  display: block;
+  height: 88px;
+  line-height: 88px;
+  margin: 0;
+  padding: 0;
+  border: none;                    /* removes the thin line under the title */
+  text-align: left;
+  text-transform: none;            /* core header is uppercase by default */
+  font-size: 64px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+/* Weekday row: all seven muted, left-aligned (Sunday red / Saturday blue removed). */
+.CX3 .weekday,
+.CX3 .weekday.weekend,
+.CX3 .weekday.weekday_0,
+.CX3 .weekday.weekday_6 {
+  color: var(--subtext0) !important;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: left;
+  padding-left: 12px;
+}
+
+/* Hide week numbers (CW 44 ...): the artboard has none. */
+.CX3 .cw { display: none; }
+
+/* Date numbers: left-aligned. .cellHeader is from memory, confirm in DevTools. */
+.CX3 .cellHeader { justify-content: flex-start; }
+.CX3 .cellDate   { padding-left: 6px; }
+
+/* In DEV mode I need the pointer */
+html, body, .module { cursor: default !important; }
+
+/* ==========================================================
+   AGENDA PAGE (v2): fill the 1920x1080 screen like the artboard.
+   Three cards: Now + Later today (left, 620px), Coming up (right, 1164px).
+   Top 144px is reserved for the page title + clock (separate modules, not built yet).
+   Selectors come from the CX3A README: .CX3A, .CX3A_{instanceId}, .agenda, .cell,
+   .cellHeader, .event, .time, .title, .description, .location, .symbol.
+   Everything is scoped by the config `classes` names (.agenda-now/-later/-upcoming);
+   the README's .CX3A_{instanceId} class did not match on the Pi. Panels are position:fixed
+   because the top_right region is anchored to the right edge, which pushed left:708px off-screen.
+   ========================================================== */
+
+/* ---- Panel positions + card chrome ---- */
+.module.agenda-now,
+.module.agenda-later,
+.module.agenda-upcoming {
+  position: fixed !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  background: var(--mantle);
+  border-radius: 28px;
+  padding: 26px 30px;
+  overflow: hidden;
+}
+.module.agenda-now      { left: 48px;  top: 144px; width: 620px;  height: 264px; }
+.module.agenda-later    { left: 48px;  top: 436px; width: 620px;  height: 572px; }
+.module.agenda-upcoming { left: 708px; top: 144px; width: 1164px; height: 864px; padding: 30px 36px 24px; }
+
+/* Card titles (drawn by CSS so no extra module is needed) */
+.module.agenda-now::before,
+.module.agenda-later::before,
+.module.agenda-upcoming::before {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 800;
+  color: var(--text);
+}
+.module.agenda-now::before      { content: "NOW";         font-size: 22px; letter-spacing: 0.12em; color: var(--subtext0); }
+.module.agenda-later::before    { content: "Later today"; font-size: 34px; }
+.module.agenda-upcoming::before { content: "Coming up";  font-size: 44px; line-height: 1; margin-bottom: 18px; }
+
+/* Empty states */
+.module.agenda-now:not(:has(.event))::after   { content: "Nothing right now"; font-size: 28px; font-weight: 700; color: var(--overlay1); }
+.module.agenda-later:not(:has(.event))::after { content: "Nothing more today"; font-size: 26px; font-weight: 700; color: var(--overlay1); }
+
+/* ---- Shared: undo the module's small fixed-width default ---- */
+.agenda-now .CX3A, .agenda-later .CX3A, .agenda-upcoming .CX3A,
+.agenda-now.CX3A, .agenda-later.CX3A, .agenda-upcoming.CX3A {
+  width: 100% !important;
+  max-width: none !important;
+  height: auto;
+  font-family: var(--font);
+  color: var(--text);
+}
+.agenda-now .agenda, .agenda-later .agenda, .agenda-upcoming .agenda { width: 100%; overflow: hidden; }
+
+/* Remove the bottom fade (clips the last row) */
+.CX3A .agenda::after { display: none !important; background-image: none !important; }
+
+/* ---- Day headings (used by Coming up) ---- */
+.CX3A .cellHeader {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--surface0);
+  font-size: 30px;
+  font-weight: 800;
+  text-transform: none;
+  letter-spacing: 0;
+}
+/* Kill the default yellow Today / blue Sat / red Sun heading colours */
+.CX3A .cell .cellHeader,
+.CX3A .cell .cellHeader * { color: var(--text) !important; }
+.CX3A .cell.today .cellHeader,
+.CX3A .cell.today .cellHeader * { color: var(--accent) !important; }
+.CX3A .cellHeader .cellHeaderSub,
+.CX3A .cellHeader .cellDate { font-size: 22px; font-weight: 600; color: var(--subtext0) !important; }
+
+/* Now / Later: the card title replaces the "TODAY  TUESDAY, NOV 17" heading */
+.agenda-now .cellHeader,
+.agenda-later .cellHeader { display: none; }
+
+/* Coming up: only days that have events, in two columns */
+.agenda-upcoming .cell:not(:has(.event)) { display: none; }
+.agenda-upcoming .agenda {
+  column-count: 2;
+  column-gap: 44px;
+}
+.agenda-upcoming .cell {
+  break-inside: avoid;
+  margin-bottom: 18px;
+}
+
+/* ---- Events ---- */
+.CX3A .event {
+  display: block;
+  margin: 0;
+  padding: 12px 0 4px;
+  background: none;
+  font-size: 27px;
+  line-height: 32px;
+  white-space: normal;
+  /* dot colour follows the calendar (the module paints the dot with --calendarColor) */
+  --calendarColor: var(--overlay1);
+}
+.CX3A .event:is(.calendar_Parent1, [data-calendar-name="Parent1"])               { --calendarColor: var(--peach)  !important; }
+.CX3A .event:is(.calendar_Family, [data-calendar-name="Family"])             { --calendarColor: var(--blue)   !important; }
+.CX3A .event:is(.calendar_Parent2, [data-calendar-name="Parent2"])                 { --calendarColor: var(--green)  !important; }
+.CX3A .event:is(.calendar_Kids, [data-calendar-name="Kids"]) { --calendarColor: var(--pink)   !important; }
+
+.CX3A .event .time  { font-size: 22px; font-weight: 700; color: var(--subtext0); }
+.CX3A .event .title { font-size: 27px; font-weight: 800; color: var(--text); }
+.CX3A .event .location { font-size: 21px; font-weight: 600; color: var(--subtext0); }
+/* Meet links / long notes were cluttering every row */
+.CX3A .event .description { display: none; }
+
+/* Now: the running event is a solid calendar-coloured block, like the artboard */
+.agenda-now .event {
+  padding: 18px 24px;
+  border-radius: 20px;
+  background: var(--calendarColor);
+  --calendarColor: var(--overlay1);
+}
+.agenda-now .event:is(.calendar_Parent1)       { background: var(--peach)  !important; }
+.agenda-now .event:is(.calendar_Family)      { background: var(--blue)   !important; }
+.agenda-now .event:is(.calendar_Parent2)        { background: var(--green)  !important; }
+.agenda-now .event:is(.calendar_Kids){ background: var(--pink)   !important; }
+.agenda-now .event .title { font-size: 44px; line-height: 1.1; color: var(--ink); }
+.agenda-now .event .time,
+.agenda-now .event .location { color: var(--ink); font-size: 26px; }
+
+/* ---- Agenda v2.1: polish after the first screenshot ---- */
+
+/* The top_right region right-aligns everything: force left in all three cards */
+.module.agenda-now, .module.agenda-later, .module.agenda-upcoming { text-align: left !important; }
+
+/* No uppercase headings, and no extra divider lines under days/events (artboard has only the heading rule) */
+.agenda-now .cellHeader, .agenda-later .cellHeader, .agenda-upcoming .cellHeader,
+.agenda-upcoming .cellHeader * { text-transform: none !important; }
+.agenda-now .cell, .agenda-later .cell, .agenda-upcoming .cell,
+.agenda-now .event, .agenda-later .event, .agenda-upcoming .event { border: none !important; box-shadow: none !important; }
+
+/* Day heading: "IN 3D  Friday, Nov 20". Hiding .cellHeaderMain removed the WHOLE heading,
+   so the relative label ("IN 3D") stays until we see the real HTML. */
+.agenda-upcoming .cellHeader .cellHeaderSub,
+.agenda-upcoming .cellHeader .cellDate { font-size: 30px; font-weight: 800; color: var(--text) !important; }
+
+/* Event row: dot, start time, title on one line (title wraps inside its own space);
+   end time dropped like the artboard; location on its own line underneath */
+.CX3A .event .headline { display: flex; align-items: baseline; gap: 14px; }
+.CX3A .event .headline .title { flex: 1 1 0; min-width: 0; }
+.CX3A .event .time.endTime { display: none; }
+.CX3A .event .time.startTime::after { content: none !important; }
+.CX3A .event .location { display: block; padding-left: 0; text-align: left; }
+
+/* ---- Agenda header band (y 40 to 128): title left, legend centre, clock right ---- */
+.module.agenda-title, .module.agenda-legend, .module.header-clock {
+  position: fixed !important;
+  margin: 0 !important;
+  top: 40px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+}
+.module.agenda-title  { left: 48px; }
+.module.agenda-legend { left: 50%; transform: translateX(-50%); }
+.module.header-clock  { right: 48px; text-align: right; }
+
+/* Title: 64px, "today" in the accent colour */
+.agenda-title .module-content div {
+  font-family: var(--font);
+  font-size: 64px !important;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  white-space: nowrap;
+}
+.agenda-title .accent { color: var(--accent); font-weight: 700; }
+
+/* Legend: coloured pills with a dark dot */
+.agenda-legend .module-content div { display: flex; gap: 12px; align-items: center; white-space: nowrap; }
+.agenda-legend .chip {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 8px 18px; border-radius: 999px;
+  font-family: var(--font); font-size: 22px; font-weight: 800; line-height: 1.2;
+  color: var(--ink);
+}
+.agenda-legend .chip i { display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: var(--ink); }
+.agenda-legend .chip.parent1   { background: var(--peach); }
+.agenda-legend .chip.family  { background: var(--blue); }
+.agenda-legend .chip.parent2 { background: var(--green); }
+.agenda-legend .chip.kids     { background: var(--pink); }
+
+/* Clock: time on top (56px), date under it (22px). Core clock puts the date first, so flip it. */
+.header-clock .digital { display: flex; flex-direction: column-reverse; align-items: flex-end; gap: 2px; font-family: var(--font); }
+.header-clock .time {
+  font-size: 56px !important; font-weight: 800; line-height: 1; letter-spacing: -0.02em;
+  color: var(--text) !important; white-space: nowrap;
+}
+.header-clock .time .dimmed, .header-clock .time sup {
+  font-size: 26px; font-weight: 700; color: var(--accent) !important; margin-left: 8px; letter-spacing: 0;
+}
+/* MagicMirror sets the colour on the hour/minute spans themselves (clock_styles.css),
+   so recolouring .time alone does not reach them. The AM/PM span has no class. */
+.header-clock .time .clock-hour-digital,
+.header-clock .time .clock-minute-digital { color: var(--clock-digits) !important; }
+.header-clock .time > span:not([class]) { color: var(--text) !important; }
+.header-clock .time .clock-second-digital { color: var(--accent) !important; }
+.header-clock .date {
+  font-size: 22px !important; font-weight: 600; line-height: 1.2;
+  color: var(--subtext0) !important; text-transform: none;
+}
+
+/* ---- Current weather chip (built-in weather module, Open-Meteo): in the header band, between the
+   legend (ends about x 1225) and the clock (starts about x 1635), every page. Icon + temperature only:
+   the location label and wind line are hidden. Tap opens the forecast page (tap module not built yet).
+   If it collides with the clock or the legend, change `right`. ---- */
+.region.top.right { z-index: 100 !important; }
+.module.weather-current {
+  position: fixed !important; margin: 0 !important;
+  top: 40px; right: 330px; height: 88px;
+  display: flex; align-items: center; cursor: pointer !important;
+  font-family: var(--font);
+}
+.weather-current .module-header { display: none !important; }
+.weather-current div:has(> .wi-strong-wind) { display: none !important; }   /* wind line (icon class from the module's template; confirm in DevTools) */
+.weather-current .bright { color: var(--text) !important; }
+.weather-current .dimmed { color: var(--subtext0) !important; }
+.weather-current .wi { color: var(--accent); }
+/* LCARS: in the title row, top right (y 252 to 332), where the page title leaves the right side empty;
+   the title and the clock fill the header band above. Hidden on the LCARS landing: its heading row
+   has the "select a screen" hint at the right. Gold temperature, periwinkle icon. */
+html.theme-lcars .module.weather-current { top: 252px; right: 40px; height: 80px; }
+html.theme-lcars.on-landing .module.weather-current { visibility: hidden; pointer-events: none; }   /* not display:none: keep it rendered */
+html.theme-lcars .weather-current .bright { color: var(--lc-gold) !important; font-weight: 400; }
+html.theme-lcars .weather-current .dimmed { color: var(--lc-lilac) !important; }
+html.theme-lcars .weather-current .wi { color: var(--lc-periwinkle); }
+
+/* ==========================================================
+   MONTH PAGE v2.1: fixes from the 2026-11-17 screenshot
+   (element names below come from DevTools on the Pi)
+   ========================================================== */
+
+/* 1. Centre: pin to the viewport like the Agenda panels (the bottom_bar region
+      ignored left:48px). 48px margin each side = centred in 1920. */
+.module.MMM-CalendarExt3 {
+  position: fixed !important;
+  margin: 0 !important;
+  left: 48px;
+  top: 40px;
+  width: 1824px;
+  height: 1000px;
+  overflow: visible;
+}
+
+/* 2. Week numbers: <div class="cw cwFirst">. The module's own rule beat my display:none. */
+.CX3 .cw,
+.CX3 .cell .cw,
+.CX3 .cw.cwFirst { display: none !important; }
+
+/* 3. Date numbers: <span class="dateParts day seq_2"> inside .cellDate. Left-align the
+      header and let the date (and today's pill) size to its content. */
+.CX3 .cellHeader {
+  display: flex !important;
+  justify-content: flex-start !important;
+  align-items: center;
+  text-align: left !important;
+}
+.CX3 .cellDate {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  margin: 0 auto 0 0 !important;
+  text-align: left !important;
+}
+.CX3 .cellDate .dateParts { text-align: left !important; }
+
+/* 4. Title: <header class="module-header" style="display: block;">. Use the theme
+      font and never clip the glyphs. */
+.module.MMM-CalendarExt3 .module-header {
+  font-family: var(--font) !important;
+  overflow: visible !important;
+  padding-bottom: 0 !important;
+}
+
+/* ==========================================================
+   MONTH PILLS: artboard shape markers instead of the calendar icon.
+   The marker is drawn by .event::before, so it does not depend on the module's
+   icon markup. The module's own icon (.symbol) is hidden.
+   Artboard pairing (colour + shape): Family blue circle, Parent1 peach square,
+   Parent2 green triangle, Kids pink diamond.
+   ========================================================== */
+.CX3 .event {
+  display: flex;
+  align-items: center;
+}
+.CX3 .event .headline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+}
+.CX3 .event::before {
+  content: "";
+  flex: none;
+  width: 11px;
+  height: 11px;
+  margin-right: 8px;
+  background: var(--ink);
+  border-radius: 50%;            /* default and Family: circle */
+}
+.CX3 .event:is(.calendar_Parent1, [data-calendar-name="Parent1"])::before     { border-radius: 2px; }
+.CX3 .event:is(.calendar_Parent2, [data-calendar-name="Parent2"])::before { border-radius: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.CX3 .event:is(.calendar_Kids, [data-calendar-name="Kids"])::before       { border-radius: 0; transform: rotate(45deg) scale(0.82); }
+
+/* The module's own dot on timed pills is the pseudo-element div.headline::before (confirmed in
+   DevTools: two ::before rules per pill, ours on .event and the module's on .headline).
+   Remove the module's; ours (.event::before) is the shape. The empty
+   <span class="noSymbol symbol"> in the headline is only a placeholder, hidden for tidiness. */
+.CX3 .event .headline::before,
+.CX3 .event.singleday .headline::before {
+  content: none !important;
+  display: none !important;
+}
+.CX3 .event .headline > .symbol.noSymbol { display: none !important; }
+
+
+/* ==========================================================
+   WEEK PAGE (MMM-CalendarExt3Journal), from the Journal artboard
+   Title and legend reuse the Agenda header band (see config.js).
+   Grid: 7 day columns, 9 AM to 9 PM, 24 half-hour rows.
+   Class names come from the module's own CSS; check in DevTools if something is off.
+   ========================================================== */
+.module.MMM-CalendarExt3Journal {
+  position: fixed !important;
+  margin: 0 !important;
+  left: 48px;
+  top: 144px;
+  width: 1824px;
+  height: 864px;
+}
+.CX3J {
+  --indexWidth: 78px;
+  --borderSize: 1px;
+  --mainBorderStyle: 1px solid var(--surface0);
+  --subBorderStyle: 0 none transparent;   /* no half-hour lines */
+  font-family: var(--font);
+  color: var(--text);
+}
+
+/* Frame lines off: header and grid top/side borders */
+.CX3J .headerContainer,
+.CX3J .main { border: 0 !important; }
+.CX3J .headerContainer .dayBackground,
+.CX3J .headerContainer .dayBackground.today { border: 0 !important; }
+
+/* Day headers: big number, then short weekday, left-aligned ("15 SUN") */
+.CX3J .daycell {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 0 14px !important;
+  height: 80px;
+  text-align: left;
+}
+.CX3J .daycell * { width: auto !important; }
+.CX3J .daycell .day {
+  order: 1;
+  width: 54px !important; height: 54px; line-height: 54px;
+  text-align: center;
+  font-size: 40px; font-weight: 800;
+  color: var(--text);
+}
+.CX3J .daycell .weekday {
+  order: 2;
+  font-size: 24px; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--subtext0) !important;
+}
+.CX3J .daycell.today .day {
+  background: var(--accent); color: var(--ink);
+  border-radius: 50%; font-size: 32px;
+}
+.CX3J .daycell.today .weekday { color: var(--accent) !important; font-weight: 800; }
+
+/* All-day row: solid pills */
+.CX3J .fulldayEvents { gap: 4px; margin: 0 0 14px 0; min-height: 40px; }
+.CX3J .event.notsingle {
+  height: 40px !important;
+  line-height: 40px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 0;
+  margin: 0 5px;
+  font-size: 21px;
+  font-weight: 800;
+}
+.CX3J .event.notsingle .headline { align-items: center; height: 40px; gap: 9px; }
+.CX3J .event.notsingle .headline .title { font-size: 21px; margin-left: 0; }
+/* All-day pills: shape + title on ONE line. The headline wraps by default (.CX3J .event .headline
+   below), so the title dropped under the shape and was clipped by the pill height. */
+.CX3J .event.notsingle .headline { flex-wrap: nowrap !important; overflow: hidden; }
+.CX3J .event.notsingle .headline > .symbol { flex: none; }
+.CX3J .event.notsingle .headline .title {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Hour labels on the left: "9 AM", one per hour */
+.CX3J .gridCell.index {
+  border: 0 !important;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 28px;
+  color: var(--subtext0);
+  padding-right: 12px;
+  transform: translateY(-14px);   /* centre the label on its hour line */
+  overflow: visible;
+}
+.CX3J .gridCell.index.odd { color: transparent; }
+
+/* Timeline cells: dark panel, hour lines and day dividers in surface0 */
+.CX3J .cell.gridCell {
+  background: var(--mantle);
+  border-right: 0;
+  border-left: 1px solid var(--surface0);
+  border-bottom: 0;
+}
+.CX3J .cell.gridCell.odd { border-bottom: 1px solid var(--surface0); }
+.CX3J .cell.gridCell.last { border-bottom: 0; }
+.CX3J .cell.today,
+.CX3J .cell.today.last {
+  border-left: 1px solid var(--surface0);
+  border-right: 0;
+  background: color-mix(in srgb, var(--accent) 10%, var(--mantle));
+}
+.CX3J .cell.today.odd { border-bottom: 1px solid var(--surface0); }
+
+/* Now line: mauve, with the time in a mauve tag on the left */
+.CX3J .nowIndicator {
+  --indicatorStyle: 2px solid var(--accent);
+  z-index: 3;
+  pointer-events: none;   /* it is a see-through box from the top of the grid down to "now"; let taps and DevTools reach the events under it */
+  font-size: 16px;
+}
+.CX3J .nowIndicator::after {
+  background-color: var(--accent);
+  color: var(--ink);
+  border-radius: 6px;
+  font-weight: 800;
+}
+
+/* Timed events: solid calendar colour, dark text */
+.CX3J .event {
+  font-family: var(--font);
+  color: var(--ink) !important;
+  --oppositeColor: var(--ink);
+}
+.CX3J .event.single {
+  border: 0 !important;
+  border-radius: 10px;
+  padding: 6px 9px;
+  margin: 1px 4px 0 4px;
+  font-size: 18px;
+  line-height: 1.15;
+  font-weight: 800;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.CX3J .event .headline { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.CX3J .event.single .headline .title {
+  flex-basis: 100%;
+  font-size: 22px;
+  line-height: 1.15;
+  margin-left: 0;
+  font-weight: 800;
+}
+.CX3J .event .time { font-size: 18px; font-weight: 800; text-align: left; }
+.CX3J .event .time.endTime { display: none; }
+.CX3J .event .description,
+.CX3J .event .location { display: none; }
+.CX3J .event.continueFromPrev,
+.CX3J .event.continueToNext { border: 0 !important; }
+
+.CX3J .event:is(.calendar_Family,  [data-calendar-name="Family"])  { background: var(--blue)  !important; }
+.CX3J .event:is(.calendar_Parent1,   [data-calendar-name="Parent1"])   { background: var(--peach) !important; }
+.CX3J .event:is(.calendar_Parent2, [data-calendar-name="Parent2"]) { background: var(--green) !important; }
+.CX3J .event:is(.calendar_Kids,    [data-calendar-name="Kids"])    { background: var(--pink)  !important; }
+.CX3J .event.passed { opacity: 0.8; }
+
+/* Shape markers: the module's empty symbol placeholder becomes the shape
+   (Family circle, Parent1 square, Parent2 triangle, Kids diamond), same as the Month page. */
+.CX3J .event .headline::before { content: none !important; display: none !important; }
+.CX3J .event .headline > .symbol {
+  display: inline-block !important;
+  width: 11px; height: 11px;
+  flex: none;
+  margin: 0 !important;
+  font-size: 0 !important;
+  background: var(--ink);
+  border-radius: 50%;
+}
+.CX3J .event .headline > .symbol > * { display: none; }
+.CX3J .event:is(.calendar_Parent1,   [data-calendar-name="Parent1"])   .headline > .symbol { border-radius: 2px; }
+.CX3J .event:is(.calendar_Parent2, [data-calendar-name="Parent2"]) .headline > .symbol { border-radius: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.CX3J .event:is(.calendar_Kids,    [data-calendar-name="Kids"])    .headline > .symbol { border-radius: 0; transform: rotate(45deg) scale(0.82); }
+
+/* ---- Week page v1.1: event layout from the real DOM (2026-11-17) ----
+   <div class="event calendar_X single" style="--eventHeight: 2; ...">
+     <div class="headline"><span class="noSymbol symbol"></span><div class="title"></div></div>
+     <div class="time inDay">11:30 AM – 12:30 PM</div>  (one element holds the whole range)
+     <div class="description"></div><div class="location"></div>
+   headline is flattened (display: contents) so shape, time and title can be reordered:
+   line 1 = shape + time range, line 2+ = title (artboard). */
+.CX3J .event.single {
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 2px;
+}
+.CX3J .event.single .headline { display: contents !important; }
+.CX3J .event.single .headline > .symbol { order: 0; }
+.CX3J .event.single .time.inDay {
+  order: 1;
+  flex: 1 1 0; min-width: 0;
+  font-size: 18px; line-height: 20px; font-weight: 800;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.CX3J .event.single .headline .title {
+  order: 2;
+  flex: 0 0 100%;
+  font-size: 22px; line-height: 25px;
+  overflow: hidden;
+}
+
+/* Side-by-side events (the module sets --eventLeft inline only in lane mode):
+   no time, shape + title, title wraps. */
+.CX3J .event.single[style*="--eventLeft"] .time.inDay { display: none; }
+.CX3J .event.single[style*="--eventLeft"] { align-items: flex-start; }
+.CX3J .event.single[style*="--eventLeft"] .headline > .symbol { margin-top: 6px !important; }
+.CX3J .event.single[style*="--eventLeft"] .headline .title {
+  flex: 1 1 0; min-width: 0;
+  font-size: 19px; line-height: 21px;
+  overflow-wrap: anywhere;
+}
+
+/* 30-minute (or shorter) events: one line, shape + title, no time. */
+.CX3J .event.single:is([style*="--eventHeight: 1;"], [style*="--eventHeight: 0."]) { padding: 4px 9px; }
+.CX3J .event.single:is([style*="--eventHeight: 1;"], [style*="--eventHeight: 0."]) .time.inDay { display: none; }
+.CX3J .event.single:is([style*="--eventHeight: 1;"], [style*="--eventHeight: 0."]) .headline .title {
+  flex: 1 1 0; min-width: 0;
+  font-size: 20px; line-height: 22px;
+  white-space: nowrap; text-overflow: ellipsis;
+}
+
+/* Now tag: centred on the line instead of sitting above it. */
+.CX3J .nowIndicator::after { transform: translateY(50%); z-index: 4; }
+
+/* ---- Legend chips: shape markers to match the event shapes (artboard) ----
+   Family circle, Parent1 square, Parent2 triangle, Kids diamond. Same 11px size as on events. */
+.agenda-legend .chip i { width: 11px; height: 11px; flex: none; }
+.agenda-legend .chip.parent1   i { border-radius: 2px; }
+.agenda-legend .chip.parent2 i { border-radius: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.agenda-legend .chip.kids    i { border-radius: 0; transform: rotate(45deg) scale(0.82); }
+
+/* ---- Agenda: shape markers instead of dots (DOM from DevTools, 2026-11-17) ----
+   <div class="event calendar_Family ... singleday"><div class="headline">
+     <span class="noSymbol symbol"></span><div class="time startTime"> <div class="time endTime"> <div class="title">
+   The module's dot is drawn as .headline::before (same as the Month page); it is turned off and the
+   empty .symbol placeholder becomes the shape, in the calendar colour.
+   On the Now card (solid colour block) the shape is dark instead. */
+.CX3A .event .headline::before { content: none !important; display: none !important; }
+.CX3A .event .headline > .symbol {
+  display: inline-block !important;
+  width: 14px; height: 14px;
+  flex: none;
+  align-self: center;
+  margin: 0 4px 0 0 !important;
+  font-size: 0 !important;
+  background: var(--calendarColor);
+  border-radius: 50%;
+}
+.CX3A .event .headline > .symbol > * { display: none; }
+.CX3A .event:is(.calendar_Parent1,   [data-calendar-name="Parent1"])   .headline > .symbol { border-radius: 2px; }
+.CX3A .event:is(.calendar_Parent2, [data-calendar-name="Parent2"]) .headline > .symbol { border-radius: 0; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.CX3A .event:is(.calendar_Kids,    [data-calendar-name="Kids"])    .headline > .symbol { border-radius: 0; transform: rotate(45deg) scale(0.82); }
+.agenda-now .event .headline > .symbol { background: var(--ink); }
+
+/* ---- Week page v1.2: less cramped event blocks (2026-11-17 screenshot) ----
+   One hour is about 61px tall, half an hour about 30px. */
+.CX3J .event.single {
+  /* the module's height, minus 3px so back-to-back events have a gap */
+  height: calc(max(calc((100% + var(--borderSize)) * var(--eventHeight)), 20%) - 3px) !important;
+  padding: 4px 9px;
+}
+.CX3J .event.single .time.inDay { font-size: 17px; line-height: 19px; }
+.CX3J .event.single .headline .title { font-size: 20px; line-height: 23px; }
+
+/* Side-by-side: tighter padding, title up to 2 lines then "…", break between words */
+.CX3J .event.single[style*="--eventLeft"] { padding: 5px 7px; column-gap: 6px; }
+.CX3J .event.single[style*="--eventLeft"] .headline .title {
+  font-size: 17px; line-height: 20px;
+  overflow-wrap: normal; word-break: normal; hyphens: auto;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* 30-minute events: single centred line */
+.CX3J .event.single:is([style*="--eventHeight: 1;"], [style*="--eventHeight: 0."]) {
+  padding: 0 9px;
+  align-items: center;
+  align-content: center;
+}
+.CX3J .event.single:is([style*="--eventHeight: 1;"], [style*="--eventHeight: 0."]) .headline .title {
+  font-size: 18px; line-height: 20px;
+}
+
+/* ==========================================================
+   TAPPABLE LEGEND (MMM-CalendarFilter), Month / Week / Agenda
+   The pills are <button class="chip family" data-calendar="Family">. The colours and
+   shapes above (.agenda-legend .chip.*) still apply; this block makes them buttons.
+   ========================================================== */
+.agenda-legend .cal-filter { display: flex; gap: 12px; align-items: center; white-space: nowrap; }
+.agenda-legend button.chip {
+  border: 0;
+  margin: 0;
+  min-height: 48px;              /* finger-sized tap target */
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;    /* no double-tap zoom delay */
+  transition: opacity 0.2s ease, filter 0.2s ease, transform 0.1s ease;
+}
+.agenda-legend button.chip:active { transform: scale(0.95); }
+.agenda-legend button.chip:focus { outline: none; }
+
+/* Hidden calendar: dimmed pill, crossed-out name */
+.agenda-legend button.chip.is-hidden {
+  opacity: 0.35;
+  filter: saturate(0.4);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
+/* Month page: the legend uses the same centred header-band position as on the other pages
+   (.module.agenda-legend above). If it collides with the month title, adjust it there. */
+
+/* Legend above the Month grid: the Month module is position:fixed at top 40 / height 1000,
+   so it covered the header band and swallowed taps on the pills. The top-centre region comes
+   earlier in the page than the bottom bar, so it painted underneath. Raise it. */
+.region.top.center { z-index: 100 !important; }
+.module.agenda-legend { z-index: 100; }
+
+/* ==========================================================
+   THEME BUTTON (MMM-ThemeSwitcher): bottom right, in the 72px band under the grids.
+   Raised above the other regions because the Month module is position:fixed down to y=1040
+   and would otherwise swallow taps. Colours come from the tokens, so it follows the theme.
+   ========================================================== */
+.region.bottom.right { z-index: 100 !important; }
+.module.MMM-ThemeSwitcher {
+  position: fixed !important;
+  margin: 0 !important;
+  right: 48px;
+  bottom: 8px;
+  z-index: 100;
+}
+.theme-switcher-wrap { display: flex; align-items: center; gap: 14px; }
+.theme-btn {
+  width: 56px;                    /* finger-sized */
+  height: 56px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--surface0);
+  border-radius: 50%;
+  background: var(--mantle);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease;
+}
+.theme-btn:active { transform: scale(0.93); }
+.theme-btn:focus { outline: none; }
+/* Half-filled circle = the usual "theme" icon */
+.theme-btn .theme-icon {
+  width: 26px;
+  height: 26px;
+  box-sizing: border-box;
+  border: 2px solid var(--subtext0);
+  border-radius: 50%;
+  background: linear-gradient(90deg, var(--subtext0) 50%, transparent 50%);
+}
+/* Theme name: appears after a tap, then fades */
+.theme-name {
+  font-family: var(--font);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--subtext0);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.theme-name.show { opacity: 1; }
+
+
+/* ==========================================================
+   INFO PANEL (core compliments module, class info-panel): bottom left, in the 72px band
+   under the grids, every page. DOM: <div class="compliment-text"><span>Make it so.</span></div>
+   (config `classes` replaces the module's "thin xlarge bright" classes, so MagicMirror's own
+   white text and font do not apply.)
+   ========================================================== */
+.region.bottom.left { z-index: 50; }
+.module.info-panel {
+  position: fixed !important;
+  margin: 0 !important;
+  left: 48px;
+  bottom: 8px;
+  width: 760px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  text-align: left;
+}
+.info-panel .compliment-text {
+  font-family: var(--font);
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+
+/* ==========================================================
+   LANDING SCREEN (MMM-Landing). Page 0 in MMM-pages.
+   Tiles are <button class="tile tone-gold">: .tile-body (.tile-stripe + .tile-art svg)
+   and .tile-bar (.tile-num, .tile-label, .tile-tag). The tone class picks the colour;
+   The tones map to the LCARS palette (--tone-*). Layout: the LCARS section further down.
+   ========================================================== */
+:root {
+  --tone-gold:       var(--peach);
+  --tone-sky:        var(--blue);
+  --tone-lilac:      var(--mauve);
+  --tone-peach:      var(--pink);
+  --tone-periwinkle: var(--green);
+  --tone-orange:     var(--accent);
+  --tone-tan:        var(--lc-tan);    /* House tile */
+  --tile-ink:        var(--mantle);   /* tick marks drawn on a filled box in the Chores icon */
+}
+.tile.tone-gold       { --tone: var(--tone-gold); }
+.tile.tone-sky        { --tone: var(--tone-sky); }
+.tile.tone-lilac      { --tone: var(--tone-lilac); }
+.tile.tone-peach      { --tone: var(--tone-peach); }
+.tile.tone-periwinkle { --tone: var(--tone-periwinkle); }
+.tile.tone-orange     { --tone: var(--tone-orange); }
+.tile.tone-tan        { --tone: var(--tone-tan); }
+
+/* MagicMirror's main.css centres this region with transform: translateY(-50%). A transformed
+   parent becomes the reference box for position:fixed children, so the landing was pushed half a
+   screen down. Only the landing uses this region, so the transform is removed here. */
+.region.middle.center { z-index: 60 !important; transform: none !important; top: 0 !important; }
+/* Same trap for the legend's region (main.css: translateX(-50%)). On the landing it must be placed
+   against the screen (LCARS moves it to the right column). On the other pages it is left alone. */
+html.on-landing .region.top.center { transform: none !important; left: 0 !important; }
+.module.landing-home {
+  position: fixed !important;
+  margin: 0 !important;
+  left: 48px;
+  top: 160px;
+  width: 1824px;
+  height: 840px;
+}
+.landing { position: relative; width: 100%; height: 100%; }
+.landing-head, .landing-side-head { display: none; }   /* LCARS only */
+.landing-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 408px;
+  gap: 24px;
+}
+.landing .tile {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 28px 32px 24px;
+  border: 0;
+  border-radius: 23px;
+  background: var(--mantle);
+  color: var(--tone);
+  font-family: var(--font);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease, filter 0.1s ease;
+}
+.landing .tile:active { transform: scale(0.98); filter: brightness(1.15); }
+.landing .tile:focus { outline: none; }
+.landing .tile-body { flex: 1; min-height: 0; display: flex; }
+.landing .tile-stripe { display: none; }
+.landing .tile-art { flex: 1; display: flex; align-items: center; justify-content: center; }
+.landing .tile-art svg { width: 100%; height: 100%; max-height: 260px; }
+.landing .tile-bar { display: flex; align-items: baseline; justify-content: space-between; }
+.landing .tile-name { display: flex; align-items: baseline; gap: 14px; }
+.landing .tile-num { font-size: 26px; font-weight: 700; color: var(--subtext0); }
+.landing .tile-label { font-size: 48px; font-weight: 800; line-height: 1; color: var(--text); }
+.landing .tile-tag { font-size: 22px; font-weight: 700; color: var(--tone); }
+.landing .tile.is-disabled { opacity: 0.4; cursor: default; }
+.landing .tile.is-disabled:active { transform: none; filter: none; }
+
+
+/* ==========================================================
+   LCARS (Star Trek TNG). Every page is restyled below.
+   Preview in DevTools:  document.documentElement.className = "theme-lcars on-landing"
+   ========================================================== */
+@font-face {
+  font-family: "Antonio";
+  src: url("../css/fonts/Antonio-VariableFont_wght.ttf") format("truetype");
+  font-weight: 100 700;
+  font-display: swap;
+}
+html.theme-lcars {
+  /* LCARS palette (artboard). The frame and the landing use these directly. */
+  --lc-black:      #000000;
+  --lc-orange:     #ff9900;
+  --lc-periwinkle: #9999ff;
+  --lc-lilac:      #cc99cc;
+  --lc-red:        #cc6666;
+  --lc-tan:        #e2d9ad;
+  --lc-gold:       #ffcc66;
+  --lc-sky:        #99ccff;
+  --lc-peach:      #ff9966;
+  --lc-text:       #ffcc99;   /* body text on black */
+  --lc-font: "Antonio", "Oswald", "Arial Narrow", sans-serif;
+
+  /* MagicMirror's own variables (main.css): .light/.regular/.bold use --font-primary,
+     .bright/.normal/.dimmed use the --color-text* values. */
+  --font-primary:   var(--lc-font);
+  --font-secondary: var(--lc-font);
+  --color-text:        var(--lc-text);
+  --color-text-bright: #ffffff;
+  --color-text-dimmed: var(--lc-lilac);
+
+  /* The shared tokens (same values as :root above) */
+  --crust:      #000000;
+  --mantle:     #0d0d14;
+  --mantle-dim: #07070b;
+  --surface0:   #2a2a3a;
+  --overlay1:   #77778a;
+  --subtext0:   var(--lc-lilac);
+  --text:       var(--lc-text);
+  --ink:        #000000;
+  --clock-digits: #ffffff;
+  --blue:  var(--lc-sky);      /* Family */
+  --peach: var(--lc-peach);    /* Parent1 */
+  --green: var(--lc-lilac);    /* Parent2 */
+  --pink:  var(--lc-gold);     /* Kids */
+  --mauve: var(--lc-orange);
+  --font: var(--lc-font);
+
+  --tone-gold:       var(--lc-gold);
+  --tone-sky:        var(--lc-sky);
+  --tone-lilac:      var(--lc-lilac);
+  --tone-peach:      var(--lc-peach);
+  --tone-periwinkle: var(--lc-periwinkle);
+  --tone-orange:     var(--lc-orange);
+  --tone-tan:        var(--lc-tan);
+  --tile-ink:        #000000;
+}
+
+/* ---- Frame (MMM-LCARSFrame): only in LCARS. Ignores taps except the header elbow. ---- */
+.module.lcars-frame { display: none; }
+html.theme-lcars .module.lcars-frame {
+  display: block;
+  position: fixed !important;
+  margin: 0 !important;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  z-index: 90;
+  pointer-events: none;
+}
+.lcars-frame, .lcars-frame * { pointer-events: none !important; }
+.lcars-frame .lf-home { pointer-events: auto !important; }
+.lcars-frame {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  font-family: var(--lc-font);
+  text-transform: uppercase;
+  color: var(--lc-orange);
+}
+.lcars-frame .lf-block, .lcars-frame .lf-curve { position: absolute; box-sizing: border-box; }
+.lcars-frame .lf-home {
+  border: 0;
+  margin: 0;
+  padding: 0 12px 56px 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  color: #000;
+  font: 700 40px/1 var(--lc-font);   /* 46px (artboard) was too wide for "AGENDA" in the 150px elbow */
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.lcars-frame .lf-home:active { filter: brightness(1.3); }
+.lcars-frame .lf-home:focus { outline: none; }
+.lcars-frame .lf-label {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 0 10px 8px 0;
+  color: #000;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1;
+}
+.lcars-frame .lf-tag { padding: 0 14px 4px 0; font-size: 26px; letter-spacing: 0.04em; }
+.lcars-frame .lf-panel-label {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 0 12px 8px 0;
+  color: #000;
+}
+.lcars-frame .lf-panel-label b    { font-size: 38px; line-height: 0.95; font-weight: 700; letter-spacing: 0.02em; }
+.lcars-frame .lf-panel-label span { font-size: 28px; line-height: 1; letter-spacing: 0.06em; }
+.lcars-frame .lf-panel-box { box-shadow: inset 0 0 0 3px var(--lc-periwinkle); border-radius: 0 52px 52px 0; }
+.lcars-frame .lf-title {
+  position: absolute;
+  right: 40px;
+  top: 10px;
+  font-size: 68px;
+  line-height: 70px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--lc-orange);
+  white-space: nowrap;
+}
+.lcars-frame .lf-subtitle {
+  position: absolute;
+  right: 40px;
+  top: 118px;
+  font-size: 26px;
+  line-height: 30px;
+  letter-spacing: 0.06em;
+  color: var(--lc-lilac);
+  white-space: nowrap;
+}
+
+/* ---- Clock: one line under the title, "WEDNESDAY, NOVEMBER 18 | 1:05 PM" ---- */
+html.theme-lcars .module.header-clock { top: 84px; right: 40px; height: 34px; }
+html.theme-lcars .header-clock .digital {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 12px;
+  font-family: var(--lc-font);
+  text-transform: uppercase;
+}
+html.theme-lcars .header-clock .date {
+  font-size: 32px !important;
+  line-height: 34px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: #fff !important;
+  text-transform: uppercase;
+}
+html.theme-lcars .header-clock .date::after { content: "|"; margin-left: 12px; }
+html.theme-lcars .header-clock .time {
+  font-size: 32px !important;
+  line-height: 34px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+html.theme-lcars .header-clock .time > span:not([class]) { color: #fff !important; margin-left: 8px; }
+html.theme-lcars .header-clock .time sup { display: none; }   /* no seconds in LCARS */
+
+/* ---- Info panel (compliments): inside the outlined panel at the top (frame draws the panel) ---- */
+html.theme-lcars .module.info-panel {
+  left: 468px;
+  top: 22px;
+  bottom: auto;
+  width: 742px;
+  height: 104px;
+  padding: 6px 60px 6px 22px;
+  box-sizing: border-box;
+  overflow: hidden;
+  z-index: 95;
+  text-transform: uppercase;
+}
+html.theme-lcars .module.info-panel { display: flex; align-items: center; }
+html.theme-lcars .info-panel .compliment-text {
+  font-size: 30px;
+  line-height: 1.0;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  color: var(--lc-orange);
+}
+
+/* ---- Theme button: the orange "THEME: LCARS" pill in the bottom bar ---- */
+html.theme-lcars .module.MMM-ThemeSwitcher {
+  left: 418px;
+  top: 1020px;
+  right: auto;
+  bottom: auto;
+  width: 380px;
+  height: 48px;
+}
+html.theme-lcars .MMM-ThemeSwitcher .module-content { width: 100%; height: 100%; }
+html.theme-lcars .theme-switcher-wrap {
+  position: relative;
+  width: 100%;
+  height: 48px;                     /* fixed, so it is flush with the 48px bar blocks (100% fell short) */
+  box-sizing: border-box;
+  padding: 0 22px 6px 0;
+  align-items: flex-end;
+  justify-content: flex-end;
+  background: var(--lc-orange);
+  border-radius: 0;                 /* square, like the bar blocks around it */
+}
+html.theme-lcars .theme-switcher-wrap:active { filter: brightness(1.3); }
+html.theme-lcars .theme-name {
+  opacity: 1;
+  font: 400 32px/1 var(--lc-font);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #000;
+}
+html.theme-lcars .theme-name::before { content: "Theme: "; }
+html.theme-lcars .theme-btn {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+html.theme-lcars .theme-btn .theme-icon { display: none; }
+
+
+/* ---- Landing in LCARS (artboard: heading at y 252, tiles at y 346, pills at x 1630) ---- */
+html.theme-lcars .module.landing-home { left: 190px; top: 252px; width: 1690px; height: 748px; }
+html.theme-lcars .landing { text-transform: uppercase; font-family: var(--lc-font); }
+html.theme-lcars .landing-head {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1410px;
+  height: 78px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+html.theme-lcars .landing-head .landing-title { font-size: 70px; line-height: 0.9; font-weight: 700; letter-spacing: 0.01em; color: var(--lc-orange); }
+html.theme-lcars .landing-head .landing-hint  { font-size: 30px; line-height: 1; font-weight: 400; letter-spacing: 0.08em; color: var(--lc-periwinkle); padding-bottom: 6px; }
+html.theme-lcars .landing-side-head {
+  display: flex;
+  position: absolute;
+  left: 1440px;
+  top: 0;
+  width: 250px;
+  height: 78px;
+  align-items: flex-end;
+  font-size: 54px;
+  line-height: 0.9;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--lc-orange);
+}
+html.theme-lcars .landing-tiles {
+  position: absolute;
+  left: 0;
+  top: 94px;
+  grid-template-columns: repeat(3, 454px);
+  grid-auto-rows: 315px;
+  gap: 24px;
+}
+html.theme-lcars .landing .tile {
+  gap: 12px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font-family: var(--lc-font);
+  text-transform: uppercase;
+}
+html.theme-lcars .landing .tile:active { transform: none; filter: brightness(1.3); }
+html.theme-lcars .landing .tile-body { flex: none; height: 219px; gap: 8px; }
+html.theme-lcars .landing .tile-stripe { display: block; width: 28px; background: var(--tone); border-radius: 28px 0 0 0; }
+html.theme-lcars .landing .tile-art { flex: 1; background: #000; padding: 16px; box-sizing: border-box; }
+html.theme-lcars .landing .tile-art svg { width: 386px; height: 187px; max-height: none; }
+html.theme-lcars .landing .tile-bar {
+  height: 84px;
+  box-sizing: border-box;
+  align-items: flex-end;
+  padding: 0 50px 8px 22px;
+  background: var(--tone);
+  border-radius: 0 42px 42px 0;
+  color: #000;
+}
+html.theme-lcars .landing .tile-name { align-items: flex-end; }
+html.theme-lcars .landing .tile-num   { font-size: 36px; line-height: 1; font-weight: 400; color: #000; }
+html.theme-lcars .landing .tile-label { font-size: 60px; line-height: 0.9; font-weight: 700; letter-spacing: 0.02em; color: #000; }
+html.theme-lcars .landing .tile-tag   { font-size: 34px; line-height: 1; font-weight: 400; color: #000; }
+html.theme-lcars .landing .tile.is-disabled { opacity: 0.4; }
+
+
+
+/* ==========================================================
+   LCARS MONTH PAGE (artboard "LCARS month"). Content box: x 190 to 1880, y 252 to 1000.
+   Title row y 252 to 330 (month name left, filter chips right), weekday row from y 346, then
+   the grid. The artboard's Tasks column (x 1396 to 1880) waits for Microsoft To Do, so the grid
+   uses the full width for now; when To Do lands, set the width to 1182px.
+   Cell height = --cellheaderheight + 3 event rows (maxEventLines) x --eventrowheight + footer
+   = 36 + 78 + 6 = 120px, so 5 weeks fit. A 6-week month (e.g. a month starting on a Friday or
+   Saturday) would run about 120px into the bottom bar: check one on the Pi.
+   ========================================================== */
+html.theme-lcars .module.MMM-CalendarExt3 {
+  left: 190px;
+  top: 252px;
+  width: 1690px;
+  height: 748px;
+}
+html.theme-lcars .module.MMM-CalendarExt3 .module-header {
+  height: 78px;
+  line-height: 78px;
+  margin-bottom: 16px;
+  font: 700 70px/78px var(--lc-font) !important;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--lc-orange);
+}
+html.theme-lcars .CX3 {
+  --eventrowheight: 26px;
+  --cellheaderheight: 36px;
+  --cellfooterheight: 6px;
+  font-family: var(--lc-font);
+}
+html.theme-lcars .CX3 .weekday,
+html.theme-lcars .CX3 .weekday.weekend,
+html.theme-lcars .CX3 .weekday.weekday_0,
+html.theme-lcars .CX3 .weekday.weekday_6 {
+  color: var(--lc-periwinkle) !important;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding-left: 8px;
+}
+html.theme-lcars .CX3 .cell,
+html.theme-lcars .CX3 .cell:not(.thisMonth) {
+  background-color: #000;
+  border: 4px solid #000;             /* the gap between cells */
+  border-radius: 0;
+  box-shadow: inset 0 0 0 2px rgba(204, 153, 204, 0.4);   /* lilac outline */
+}
+html.theme-lcars .CX3 .cell:not(.thisMonth) { opacity: 0.55; }
+html.theme-lcars .CX3 .cell.today {
+  background-color: rgba(255, 153, 0, 0.12);
+  box-shadow: inset 0 0 0 3px var(--lc-orange);
+}
+html.theme-lcars .CX3 .cellDate,
+html.theme-lcars .CX3 .cell:not(.thisMonth) .cellDate {
+  font-size: 28px;
+  line-height: 32px;
+  font-weight: 400;
+  color: var(--lc-gold);
+  text-transform: uppercase;
+}
+html.theme-lcars .CX3 .cell.today .cellDate {
+  height: 30px;
+  padding: 0 12px 0 8px;
+  border-radius: 0 15px 15px 0;
+  background: var(--lc-orange);
+  color: #000;
+  font-weight: 400;
+}
+html.theme-lcars .CX3 .event {
+  height: 22px;
+  line-height: 22px;
+  margin: 2px 8px;
+  padding: 0 10px 0 8px;
+  border-radius: 0 11px 11px 0;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+html.theme-lcars .CX3 .event::before { width: 10px; height: 10px; }
+
+/* 6-week months (e.g. January, May, October 2027): 5 x 120px fits, 6 x 120px ran ~96px into the
+   bottom bar (seen on the Pi 2026-11-19). When the month has a sixth .week row, every row drops to
+   30 + 3 x 22 + 4 = 100px (6 x 100 = 600px, ends above y 1000) and the pills and dates shrink to suit.
+   The `.week ~ .week ...` chain counts six week rows whatever else sits beside them. */
+html.theme-lcars .CX3:has(.week ~ .week ~ .week ~ .week ~ .week ~ .week) {
+  --cellheaderheight: 30px;
+  --eventrowheight: 22px;
+  --cellfooterheight: 4px;
+}
+html.theme-lcars .CX3:has(.week ~ .week ~ .week ~ .week ~ .week ~ .week) .cellDate {
+  font-size: 24px;
+  line-height: 28px;
+}
+html.theme-lcars .CX3:has(.week ~ .week ~ .week ~ .week ~ .week ~ .week) .cell.today .cellDate { height: 26px; }
+html.theme-lcars .CX3:has(.week ~ .week ~ .week ~ .week ~ .week ~ .week) .event {
+  height: 19px;
+  line-height: 19px;
+  margin: 1px 8px 2px;
+  font-size: 15px;
+}
+html.theme-lcars .CX3:has(.week ~ .week ~ .week ~ .week ~ .week ~ .week) .event::before { width: 9px; height: 9px; }
+
+/* ==========================================================
+   LCARS CALENDAR FILTER: four pills in the bottom bar, every LCARS page (landing included).
+   They take the place of the frame's last two bottom-bar blocks (x 914 to 1908, y 1020, 48px tall;
+   the frame leaves the gap when `filterBar: true`). Label at the bottom right like the theme pill,
+   shape marker before the name. Hidden calendar = black pill with a coloured outline.
+   main.css centres the top_center region with transform: translateX(-50%), which would also move
+   this fixed module, so the transform is off in LCARS.
+   ========================================================== */
+html.theme-lcars .region.top.center { transform: none !important; left: 0 !important; }
+html.theme-lcars .agenda-legend .chip.family  { --chip: var(--blue); }
+html.theme-lcars .agenda-legend .chip.parent1   { --chip: var(--peach); }
+html.theme-lcars .agenda-legend .chip.parent2 { --chip: var(--green); }
+html.theme-lcars .agenda-legend .chip.kids    { --chip: var(--pink); }
+html.theme-lcars .module.agenda-legend {
+  left: 914px;
+  top: 1020px;
+  right: auto;
+  width: 994px;
+  height: 48px;
+  transform: none;
+  align-items: stretch;
+}
+html.theme-lcars .agenda-legend .module-content,
+html.theme-lcars .agenda-legend .module-content > div { width: 100%; height: 100%; }
+html.theme-lcars .agenda-legend .module-content div.cal-filter { gap: 8px; align-items: stretch; }
+html.theme-lcars .agenda-legend button.chip {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 48px;
+  min-height: 48px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0 20px 6px 12px;
+  border-radius: 0;
+  background: var(--chip);
+  color: #000;
+  font: 400 32px/1 var(--lc-font);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+html.theme-lcars .agenda-legend button.chip:last-child { border-radius: 0 24px 24px 0; padding-right: 28px; }
+html.theme-lcars .agenda-legend button.chip:active { transform: none; filter: brightness(1.3); }
+html.theme-lcars .agenda-legend .chip i { width: 16px; height: 16px; margin-bottom: 7px; background: currentColor; }
+html.theme-lcars .agenda-legend button.chip.is-hidden {
+  opacity: 1;
+  filter: none;
+  text-decoration: none;
+  background: #000;
+  box-shadow: inset 0 0 0 3px var(--chip);
+  color: var(--chip);
+}
+
+/* ---- LCARS landing: the pills moved to the bottom bar, so the tiles use the full width ---- */
+html.theme-lcars .landing-side-head { display: none; }
+html.theme-lcars .landing-head { width: 1690px; }
+html.theme-lcars .landing-tiles { width: 1690px; grid-template-columns: repeat(3, 1fr); }
+html.theme-lcars .landing .tile-art { display: flex; justify-content: center; align-items: center; }
+
+/* ==========================================================
+   LCARS WEEK PAGE (artboard "LCARS week"). Content box: x 190 to 1880, y 252 to 1000.
+   Title row y 252 to 330 ("THIS WEEK"); the week grid from y 346 to 1000 (654px):
+   day headers 56px, all-day row, then 9 AM to 9 PM. The module's own height comes from config
+   (`height: "864px"` = --moduleHeight on .CX3J); LCARS overrides it here.
+   ========================================================== */
+/* Page titles (helloworld, class agenda-title): "THIS WEEK", "AGENDA TODAY". Same row on every page. */
+html.theme-lcars .module.agenda-title {
+  left: 190px;
+  top: 252px;
+  height: 78px;
+  align-items: flex-end;
+}
+html.theme-lcars .agenda-title .module-content div {
+  font: 700 70px/0.9 var(--lc-font) !important;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--lc-orange);
+}
+html.theme-lcars .agenda-title .accent { color: var(--lc-lilac); font-weight: 400; }
+
+html.theme-lcars .module.MMM-CalendarExt3Journal {
+  left: 190px;
+  top: 346px;
+  width: 1690px;
+  height: 654px;
+}
+html.theme-lcars .CX3J {
+  --moduleHeight: 654px !important;
+  --indexWidth: 94px;
+  --mainBorderStyle: 2px solid rgba(204, 153, 204, 0.35);
+  font-family: var(--lc-font);
+  text-transform: uppercase;
+}
+/* Day headers: gold number + periwinkle weekday on a periwinkle underline; today = orange tab */
+html.theme-lcars .CX3J .daycell {
+  height: 56px;
+  gap: 10px;
+  padding: 0 0 0 12px !important;
+  box-shadow: inset 0 -4px 0 var(--lc-periwinkle);
+}
+html.theme-lcars .CX3J .daycell .day {
+  width: auto !important;
+  height: auto;
+  line-height: 1;
+  font-size: 40px;
+  font-weight: 400;
+  color: var(--lc-gold);
+  background: none;
+  border-radius: 0;
+}
+html.theme-lcars .CX3J .daycell .weekday {
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: var(--lc-periwinkle) !important;
+}
+html.theme-lcars .CX3J .daycell.today {
+  background: var(--lc-orange);
+  border-radius: 0 28px 28px 0;
+  box-shadow: none;
+}
+html.theme-lcars .CX3J .daycell.today .day,
+html.theme-lcars .CX3J .daycell.today .weekday { color: #000 !important; font-size: 40px; font-weight: 400; }
+html.theme-lcars .CX3J .daycell.today .weekday { font-size: 26px; }
+
+/* All-day row */
+html.theme-lcars .CX3J .fulldayEvents { margin: 4px 0 10px 0; min-height: 32px; }
+html.theme-lcars .CX3J .event.notsingle {
+  height: 32px !important;
+  line-height: 32px;
+  border-radius: 0 16px 16px 0;
+  font-size: 22px;
+  font-weight: 400;
+}
+html.theme-lcars .CX3J .event.notsingle .headline { height: 32px; }
+html.theme-lcars .CX3J .event.notsingle .headline .title { font-size: 22px; }
+
+/* The grid gets what is left under the headers (654 - 102 = 552px for 24 half-hour rows, 23px
+   each). The rows must be allowed to shrink: with the shared label line-height (28px) as their
+   minimum, 24 rows needed 672px and the grid ran into the bottom bar. */
+html.theme-lcars .CX3J .main {
+  height: auto;
+  min-height: 0;
+  grid-template-rows: repeat(var(--periods), minmax(0, 1fr));
+}
+
+/* Hour labels and grid: periwinkle labels, faint lilac lines on black, today column tinted */
+html.theme-lcars .CX3J .gridCell.index {
+  font-size: 22px;
+  line-height: 24px;
+  transform: translateY(-12px);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--lc-periwinkle);
+}
+html.theme-lcars .CX3J .gridCell.index.odd { color: transparent; }
+html.theme-lcars .CX3J .cell.gridCell {
+  background: #000;
+  border-left: 2px solid rgba(204, 153, 204, 0.35);
+}
+html.theme-lcars .CX3J .cell.gridCell.odd { border-bottom: 2px solid rgba(204, 153, 204, 0.35); }
+html.theme-lcars .CX3J .cell.today,
+html.theme-lcars .CX3J .cell.today.last {
+  border-left: 2px solid rgba(204, 153, 204, 0.35);
+  background: rgba(255, 153, 0, 0.12);
+}
+html.theme-lcars .CX3J .cell.today.odd { border-bottom: 2px solid rgba(204, 153, 204, 0.35); }
+
+/* Now line: orange, black time tag */
+html.theme-lcars .CX3J .nowIndicator { --indicatorStyle: 3px solid var(--lc-orange); }
+html.theme-lcars .CX3J .nowIndicator::after { background-color: var(--lc-orange); color: #000; border-radius: 0 8px 8px 0; font-weight: 400; }
+
+/* Timed events: square left edge, rounded right (LCARS), Antonio */
+html.theme-lcars .CX3J .event.single {
+  border-radius: 0 12px 12px 0;
+  font-weight: 400;
+}
+/* A 2px black ring around every timed event, so blocks that touch or overlap in time still read
+   as separate (on black it is invisible otherwise). Same idea as the gap on the other pages. */
+html.theme-lcars .CX3J .event.single { box-shadow: 0 0 0 2px #000; }
+
+/* An hour is 46px here (43px after the 3px gap), so time + title must fit in 2 + 16 + 2 + 21 + 2 px. */
+html.theme-lcars .CX3J .event.single { padding: 2px 8px; row-gap: 2px; }
+html.theme-lcars .CX3J .event.single .time.inDay { font-size: 15px; line-height: 16px; font-weight: 400; letter-spacing: 0.03em; }
+html.theme-lcars .CX3J .event.single .headline .title { font-size: 19px; line-height: 21px; font-weight: 400; letter-spacing: 0.02em; }
+html.theme-lcars .CX3J .event.single[style*="--eventLeft"] { padding: 3px 6px; }
+html.theme-lcars .CX3J .event.single[style*="--eventLeft"] .headline .title { font-size: 17px; line-height: 19px; }
+/* 30-minute events (about 20px tall): one small line */
+html.theme-lcars .CX3J .event.single:is([style*="--eventHeight: 1;"], [style*="--eventHeight: 0."]) { padding: 0 8px; }
+html.theme-lcars .CX3J .event.single:is([style*="--eventHeight: 1;"], [style*="--eventHeight: 0."]) .headline .title { font-size: 16px; line-height: 18px; }
+
+/* ==========================================================
+   LCARS AGENDA PAGE (artboard "LCARS agenda"). Content box: x 190 to 1880, y 252 to 1000.
+   Title "AGENDA TODAY" (agenda-title rule above). Three MMM-CalendarExt3Agenda instances:
+     NOW          x 190, y 346, 560 wide: orange bar, then the running event as a big colour block
+     LATER TODAY  x 190, y 638, 560 wide: sky bar, then 86px rows (shape, time, title)
+     COMING UP    x 774, y 346, 1106 wide: lilac bar, then days in two columns
+   The bars are the module's ::before; "DAYS WITH EVENTS" is .CX3A::before.
+   Module DOM (CX3A source): .CX3A > .agenda > .cell > .cellHeader (.cellHeaderMain: .cellDay
+   "tomorrow", .cellDate, .cw) + .cellBody (.multiday / .fullday / .single > .event) + .cellFooter.
+   Not built (artboard only): the Now progress bar and the "2 EVENTS" count on Later today.
+   ========================================================== */
+html.theme-lcars .module.agenda-now,
+html.theme-lcars .module.agenda-later,
+html.theme-lcars .module.agenda-upcoming {
+  background: none;
+  border-radius: 0;
+  padding: 0;
+  text-transform: uppercase;
+  font-family: var(--lc-font);
+}
+html.theme-lcars .module.agenda-now      { left: 190px; top: 346px; width: 560px;  height: 268px; }
+html.theme-lcars .module.agenda-later    { left: 190px; top: 638px; width: 560px;  height: 362px; }
+html.theme-lcars .module.agenda-upcoming { left: 774px; top: 346px; width: 1106px; height: 654px; padding: 0; }
+
+/* Card bars */
+html.theme-lcars .module.agenda-now::before,
+html.theme-lcars .module.agenda-later::before,
+html.theme-lcars .module.agenda-upcoming::before {
+  display: flex;
+  align-items: flex-end;
+  height: 44px;
+  box-sizing: border-box;
+  margin: 0 0 8px;
+  padding: 0 28px 6px 16px;
+  border-radius: 0 22px 22px 0;
+  font: 700 34px/1 var(--lc-font);
+  letter-spacing: 0.04em;
+  color: #000;
+}
+html.theme-lcars .module.agenda-now::before      { content: "Now";         background: var(--lc-orange); }
+html.theme-lcars .module.agenda-later::before    { content: "Later today"; background: var(--lc-sky); }
+html.theme-lcars .module.agenda-upcoming::before { content: "Coming up";   background: var(--lc-lilac); margin-bottom: 12px; }
+html.theme-lcars .agenda-upcoming .CX3A::before {
+  content: "Days with events";
+  position: absolute;
+  top: 0;
+  right: 28px;
+  height: 44px;
+  box-sizing: border-box;
+  padding-bottom: 6px;
+  display: flex;
+  align-items: flex-end;
+  font: 400 26px/1 var(--lc-font);
+  letter-spacing: 0.06em;
+  color: #000;
+}
+
+/* Empty states */
+html.theme-lcars .module.agenda-now:not(:has(.event))::after,
+html.theme-lcars .module.agenda-later:not(:has(.event))::after {
+  display: block;
+  padding: 18px 12px;
+  font: 400 30px/1 var(--lc-font);
+  letter-spacing: 0.06em;
+  color: var(--lc-periwinkle);
+}
+
+/* Shared event parts: Antonio, calendar shapes at 18px */
+html.theme-lcars .CX3A { font-family: var(--lc-font); }
+html.theme-lcars .CX3A .event .headline > .symbol { width: 18px; height: 18px; }
+html.theme-lcars .CX3A .cw { display: none; }
+
+/* NOW: the running event as a 216px block in its calendar colour */
+html.theme-lcars .agenda-now .event {
+  min-height: 216px;
+  box-sizing: border-box;
+  padding: 18px 28px 20px 24px;
+  border-radius: 0 44px 44px 0;
+}
+html.theme-lcars .agenda-now .event .headline { flex-wrap: wrap; align-items: center; column-gap: 12px; row-gap: 22px; }
+html.theme-lcars .agenda-now .event .headline > .symbol { order: 0; width: 22px; height: 22px; }
+html.theme-lcars .agenda-now .event .time { order: 1; font: 700 32px/1 var(--lc-font); letter-spacing: 0.03em; color: #000; }
+html.theme-lcars .agenda-now .event .time.endTime { display: block; }
+html.theme-lcars .agenda-now .event .time.startTime::after { content: " \2013" !important; }
+html.theme-lcars .agenda-now .event .title {
+  order: 2;
+  flex: 0 0 100%;
+  font: 700 66px/0.95 var(--lc-font);
+  letter-spacing: 0.01em;
+  color: #000;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+html.theme-lcars .agenda-now .event .location { font: 400 26px/1.1 var(--lc-font); color: #000; margin-top: 8px; }
+
+/* LATER TODAY: 86px rows with a faint lilac rule */
+html.theme-lcars .agenda-later .event {
+  height: 86px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 12px;
+  box-shadow: inset 0 -3px 0 rgba(204, 153, 204, 0.3) !important;
+}
+html.theme-lcars .agenda-later .event .headline { align-items: center; gap: 16px; }
+html.theme-lcars .agenda-later .event .time { flex: 0 0 104px; font: 400 32px/1 var(--lc-font); color: var(--lc-gold); }
+html.theme-lcars .agenda-later .event .title {
+  font: 400 42px/1 var(--lc-font);
+  letter-spacing: 0.02em;
+  color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+html.theme-lcars .agenda-later .event .location { display: none; }
+
+/* COMING UP: days in two 541px columns, filling the first column before the second */
+html.theme-lcars .agenda-upcoming .agenda {
+  height: 598px;
+  column-count: 2;
+  column-gap: 24px;
+  column-fill: auto;
+}
+html.theme-lcars .agenda-upcoming .cell { margin-bottom: 22px; }
+html.theme-lcars .agenda-upcoming .cellHeader {
+  height: 40px;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 14px;
+  padding: 0 0 6px;
+  border-bottom: 0;
+  box-shadow: inset 0 -3px 0 rgba(204, 153, 204, 0.4);
+  text-transform: uppercase !important;
+}
+html.theme-lcars .agenda-upcoming .cellHeaderMain { display: flex; align-items: center; gap: 14px; }
+html.theme-lcars .agenda-upcoming .cellHeader .cellDay,
+html.theme-lcars .agenda-upcoming .cellHeader .cellDay * {
+  height: 34px;
+  box-sizing: border-box;
+  padding: 0 12px 0 10px;
+  border-radius: 0 17px 17px 0;
+  background: var(--lc-orange);
+  font: 700 26px/34px var(--lc-font) !important;
+  letter-spacing: 0.04em;
+  color: #000 !important;
+  text-transform: uppercase !important;
+}
+html.theme-lcars .agenda-upcoming .cellHeader .cellDay * { padding: 0; background: none; }
+html.theme-lcars .agenda-upcoming .cellHeader .cellDate,
+html.theme-lcars .agenda-upcoming .cellHeader .cellDate * {
+  font: 400 30px/1 var(--lc-font) !important;
+  letter-spacing: 0.06em;
+  color: var(--lc-periwinkle) !important;
+  text-transform: uppercase !important;
+}
+html.theme-lcars .agenda-upcoming .event {
+  height: 44px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0;
+}
+html.theme-lcars .agenda-upcoming .event .headline { align-items: center; gap: 14px; }
+html.theme-lcars .agenda-upcoming .event .time { flex: 0 0 96px; font: 400 28px/1 var(--lc-font); color: var(--lc-gold); }
+html.theme-lcars .agenda-upcoming .event .title {
+  font: 400 32px/1 var(--lc-font);
+  letter-spacing: 0.02em;
+  color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+html.theme-lcars .agenda-upcoming .event .location { display: none; }
+/* The module fades the bottom 10% of every agenda (mask-image) and caps its height at 600px */
+html.theme-lcars .CX3A .agenda { mask-image: none; -webkit-mask-image: none; max-height: none; }
+
+/* All-day and multi-day events: the module draws them as small filled pills (max half width,
+   symbol and time hidden). In LCARS they are rows like the timed ones, with "ALL DAY" in the
+   time column. */
+html.theme-lcars .CX3A .cellBody :is(.fullday, .multiday) { display: block; }
+html.theme-lcars .CX3A .cellBody :is(.fullday, .multiday) .event {
+  display: flex;
+  max-width: none;
+  width: auto;
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: none !important;
+  font-size: inherit;
+  line-height: 1;
+}
+html.theme-lcars .CX3A .cellBody :is(.fullday, .multiday) .event .headline > .symbol { display: inline-block !important; }
+html.theme-lcars .CX3A .cellBody :is(.fullday, .multiday) .event .title {
+  color: #fff;
+  font-weight: 400;
+  display: block;
+}
+html.theme-lcars .agenda-upcoming :is(.fullday, .multiday) .event .headline > .title::before {
+  content: "All day";
+  display: inline-block;
+  width: 96px;
+  margin-right: 14px;
+  font-size: 28px;
+  color: var(--lc-gold);
+}
+
+/* ==========================================================
+   CHORES PAGE (MMM-Chores by PierreGode), page 4. Shared rules first; LCARS block further down.
+   Module DOM with groupPerUserOnMirror (from its source):
+     div (wrapper) > div (board) > [ div.small.bright "Parent1" , ul.normal > li ]  repeated per person
+     li = <input type=checkbox> + text "Chore name 11/20" + span.xsmall.dimmed " — Parent1"
+     li.task-done when ticked; li.dimmed "No tasks" when a person has none.
+   People are in alphabetical order. Each name/list pair becomes one grid column. The checkbox is
+   stretched invisibly over the whole row, so a tap anywhere on a chore ticks it; the visible box is
+   drawn by li::before. Column colour comes from the person's position (1st to 4th, alphabetical).
+   Not possible with the module as it is: progress bars, "X of Y done", overdue / due-today colours
+   (the module gives no class for them, and the date is in the same text as the name).
+   ========================================================== */
+.module.chores-board {
+  position: fixed !important;
+  margin: 0 !important;
+  left: 48px;
+  top: 160px;
+  width: 1824px;
+  height: 840px;
+  overflow: hidden;
+  text-align: left;
+}
+.chores-board .MMM-Chores, .module.chores-board.MMM-Chores { padding: 0; }
+/* the board: one column per person */
+.chores-board div:has(> div.small.bright + ul) {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: auto 1fr;
+  grid-auto-columns: minmax(0, 1fr);
+  column-gap: 24px;
+  height: 840px;
+}
+.chores-board div:has(> div.small.bright + ul) > div.small.bright:nth-of-type(1), .chores-board div:has(> div.small.bright + ul) > ul:nth-of-type(1) { --person: var(--peach); }
+.chores-board div:has(> div.small.bright + ul) > div.small.bright:nth-of-type(2), .chores-board div:has(> div.small.bright + ul) > ul:nth-of-type(2) { --person: var(--lc-tan); }
+.chores-board div:has(> div.small.bright + ul) > div.small.bright:nth-of-type(3), .chores-board div:has(> div.small.bright + ul) > ul:nth-of-type(3) { --person: var(--pink); }
+.chores-board div:has(> div.small.bright + ul) > div.small.bright:nth-of-type(4), .chores-board div:has(> div.small.bright + ul) > ul:nth-of-type(4) { --person: var(--green); }
+
+/* person header: top of the card */
+.chores-board div.small.bright {
+  margin: 0 !important;
+  padding: 22px 26px 12px;
+  border-radius: 23px 23px 0 0;
+  background: var(--mantle);
+  font: 800 36px/1.1 var(--font);
+  color: var(--person, var(--accent));
+}
+/* the person's list: rest of the card */
+.chores-board ul.normal {
+  margin: 0;
+  padding: 4px 16px 16px;
+  border-radius: 0 0 23px 23px;
+  background: var(--mantle);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.chores-board li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 64px;
+  margin: 0;
+  padding: 8px 10px 8px 54px;
+  box-sizing: border-box;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--person, var(--accent)) 8%, transparent);
+  font: 700 24px/1.2 var(--font);
+  color: var(--text);
+  opacity: 1;
+}
+/* the visible box: a circle in the person's colour; filled with a tick when done */
+.chores-board li::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin-top: -13px;
+  box-sizing: border-box;
+  border: 3px solid var(--person, var(--accent));
+  border-radius: 50%;
+}
+.chores-board li.task-done::before {
+  background: var(--person, var(--accent)) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Cpolyline points='8,15 13,20 22,10' fill='none' stroke='%2311111b' stroke-width='4'/%3E%3C/svg%3E") center / 26px no-repeat;
+  border-color: var(--person, var(--accent));
+}
+.chores-board li.task-done { color: var(--overlay1); text-decoration: line-through; opacity: 1; }
+/* the real checkbox, invisible, over the whole row */
+.chores-board li input[type="checkbox"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0 !important;
+  opacity: 0;
+  transform: none !important;
+  cursor: pointer;
+}
+.chores-board li > span.xsmall { display: none; }        /* " — Parent1": the column already says who */
+.chores-board li.dimmed { padding-left: 14px; background: none; font-style: normal; color: var(--overlay1); }
+.chores-board li.dimmed::before { content: none; }
+.chores-board li.moving { opacity: 0.4; transform: none; }
+
+/* ---- Chores in LCARS (artboard "LCARS chores"): x 190 to 1880, y 346 to 1000, four 404px columns.
+   Name bar 44px in the person's colour; 104px rows: a 64px coloured cell with a black box (filled
+   with a white tick when done), then the chore in a lilac-outlined panel. Five rows fit per person. */
+html.theme-lcars .module.chores-board { left: 190px; top: 346px; width: 1690px; height: 654px; }
+html.theme-lcars .chores-board div:has(> div.small.bright + ul) { height: 654px; grid-auto-columns: 404px; }
+html.theme-lcars .chores-board div:has(> div.small.bright + ul) > :is(div.small.bright, ul):nth-of-type(1) { --person: var(--lc-peach); }
+html.theme-lcars .chores-board div:has(> div.small.bright + ul) > :is(div.small.bright, ul):nth-of-type(2) { --person: var(--lc-tan); }
+html.theme-lcars .chores-board div:has(> div.small.bright + ul) > :is(div.small.bright, ul):nth-of-type(3) { --person: var(--lc-gold); }
+html.theme-lcars .chores-board div:has(> div.small.bright + ul) > :is(div.small.bright, ul):nth-of-type(4) { --person: var(--lc-lilac); }
+html.theme-lcars .chores-board div.small.bright {
+  height: 44px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 28px 6px 16px;
+  border-radius: 0 22px 22px 0;
+  background: var(--person);
+  font: 700 34px/1 var(--lc-font);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #000;
+}
+html.theme-lcars .chores-board ul.normal {
+  margin-top: 14px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  gap: 10px;
+}
+html.theme-lcars .chores-board li {
+  height: 104px;
+  min-height: 0;
+  flex: none;
+  padding: 0 18px 0 88px;      /* 64px cell + 6px gap + 18px */
+  border-radius: 0;
+  background: none;
+  font: 400 32px/1.05 var(--lc-font);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+  overflow: hidden;
+}
+html.theme-lcars .chores-board li::before {
+  left: 0;
+  top: 0;
+  width: 64px;
+  height: 104px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--person) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Crect x='2' y='2' width='26' height='26' fill='none' stroke='%23000' stroke-width='4'/%3E%3C/svg%3E") center / 30px no-repeat;
+}
+html.theme-lcars .chores-board li.task-done::before { background: var(--person) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30'%3E%3Crect width='30' height='30' fill='%23000'/%3E%3Cpolyline points='7,15 13,21 23,9' fill='none' stroke='%23fff' stroke-width='4'/%3E%3C/svg%3E") center / 30px no-repeat; }
+html.theme-lcars .chores-board li::after {
+  content: "";
+  position: absolute;
+  left: 70px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 0 26px 26px 0;
+  box-shadow: inset 0 0 0 2px rgba(204, 153, 204, 0.4);
+  pointer-events: none;
+}
+html.theme-lcars .chores-board li.task-done { color: #a0a0a0; }
+html.theme-lcars .chores-board li.dimmed { padding-left: 18px; color: var(--lc-periwinkle); font-size: 26px; letter-spacing: 0.06em; }
+html.theme-lcars .chores-board li.dimmed::after { content: none; }
+
+/* Whole board empty (nobody has a chore today or overdue): the module shows one
+   <div class="medium dimmed">No tasks to show 🎉</div> instead of the columns. */
+.chores-board div.dimmed {
+  padding: 24px 26px;
+  border-radius: 23px;
+  background: var(--mantle);
+  font: 700 30px/1.2 var(--font);
+  color: var(--subtext0);
+}
+html.theme-lcars .chores-board div.dimmed {
+  display: flex;
+  align-items: center;
+  height: 86px;
+  box-sizing: border-box;
+  padding: 0 28px;
+  border-radius: 0 43px 43px 0;
+  background: none;
+  box-shadow: inset 0 0 0 3px var(--lc-periwinkle);
+  font: 400 36px/1 var(--lc-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lc-periwinkle);
+}
+
+
+/* ==========================================================
+   HOUSE PAGE (page 5): smart-home hub. Shared rules first; LCARS block further down.
+   MMM-NestThermostat (custom module) on the left; MMM-NestCameras (class house-cameras) on the right,
+   styled in "HOUSE PAGE: CAMERAS" further down.
+   Thermostat DOM (from the module):
+     .nest-thermostat.is-<status> [data-mode=HEAT|COOL|HEATCOOL|OFF]
+       .nt-head  > .nt-title + .nt-status          ("Climate" / "Heating", "Idle", "Eco", "Offline")
+       .nt-now   > .nt-ambient + .nt-now-sub       ("68°" / "Inside · 41% humidity")
+       .nt-targets(.is-pending) > .nt-target.nt-heat|.nt-cool > button.nt-step.nt-minus,
+                                  .nt-target-mid > .nt-target-label + .nt-target-value, button.nt-step.nt-plus
+                                  (or .nt-off when the system is off)
+       .nt-modes > button.nt-mode.nt-mode-heat|cool|heatcool|off|eco(.is-active)
+       .nt-foot(.is-error)
+   Colours: heat = peach, cool = blue, Heat·Cool = mauve, eco = green, off = grey.
+   ========================================================== */
+.module.house-climate, .module.house-cameras {
+  position: fixed !important;
+  margin: 0 !important;
+  top: 160px;
+  height: 840px;
+  text-align: left;
+}
+.module.house-climate { left: 48px; width: 600px; }
+.module.house-cameras { left: 672px; width: 1200px; }
+.house-climate .module-content, .house-cameras .module-content { height: 100%; }
+
+.nest-thermostat {
+  --nt-heat: var(--peach);
+  --nt-cool: var(--blue);
+  --nt-range: var(--mauve);
+  --nt-eco: var(--green);
+  --nt-off: var(--overlay1);
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 26px 32px 22px;
+  border-radius: 23px;
+  background: var(--mantle);
+  font-family: var(--font);
+  color: var(--text);
+}
+.nt-head { display: flex; align-items: center; justify-content: space-between; }
+.nt-title { font: 800 36px/1.1 var(--font); color: var(--text); }
+.nt-status {
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: var(--nt-tone, var(--nt-off));
+  font: 800 22px/1.2 var(--font);
+  color: var(--ink);
+}
+.nest-thermostat.is-heating { --nt-tone: var(--nt-heat); }
+.nest-thermostat.is-cooling { --nt-tone: var(--nt-cool); }
+.nest-thermostat.is-eco     { --nt-tone: var(--nt-eco); }
+.nest-thermostat.is-offline .nt-status { background: none; box-shadow: inset 0 0 0 3px var(--peach); color: var(--peach); }
+
+.nt-now { display: flex; flex-direction: column; }
+.nt-ambient { font: 800 172px/0.95 var(--font); letter-spacing: -0.03em; color: var(--text); }
+.nt-now-sub { font: 700 26px/1.2 var(--font); color: var(--subtext0); }
+
+.nt-targets { display: flex; flex-direction: column; gap: 14px; }
+.nt-target {
+  --nt-row: var(--nt-heat);
+  display: grid;
+  grid-template-columns: 96px 1fr 96px;
+  align-items: center;
+  gap: 12px;
+  height: 120px;
+  padding: 0 12px;
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--nt-row) 10%, transparent);
+}
+.nt-target.nt-cool { --nt-row: var(--nt-cool); }
+.nt-target-mid { display: flex; flex-direction: column; align-items: center; }
+.nt-target-label { font: 700 22px/1.2 var(--font); color: var(--subtext0); }
+.nt-target-value { font: 800 68px/1 var(--font); color: var(--nt-row); }
+.nt-targets.is-pending .nt-target-value { opacity: 0.75; }
+.nt-off { padding: 26px 0; font: 700 28px/1.2 var(--font); color: var(--overlay1); }
+
+.nest-thermostat button {
+  border: 0;
+  font-family: var(--font);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease, filter 0.1s ease;
+}
+.nest-thermostat button:active { transform: scale(0.95); filter: brightness(1.15); }
+.nest-thermostat button:focus { outline: none; }
+.nest-thermostat button:disabled { opacity: 0.35; cursor: default; }
+.nest-thermostat button:disabled:active { transform: none; filter: none; }
+.nt-step {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: var(--nt-row);
+  font-size: 60px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.nt-modes { display: flex; flex-wrap: wrap; gap: 12px; }
+.nt-mode {
+  --nt-pill: var(--nt-off);
+  flex: 1 1 auto;
+  height: 64px;
+  padding: 0 20px;
+  border-radius: 32px;
+  background: none;
+  box-shadow: inset 0 0 0 3px var(--nt-pill);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--nt-pill);
+}
+.nt-mode-heat     { --nt-pill: var(--nt-heat); }
+.nt-mode-cool     { --nt-pill: var(--nt-cool); }
+.nt-mode-heatcool { --nt-pill: var(--nt-range); }
+.nt-mode-eco      { --nt-pill: var(--nt-eco); }
+.nt-mode.is-active { background: var(--nt-pill); color: var(--ink); }
+
+.nt-foot { margin-top: auto; font: 700 20px/1.2 var(--font); color: var(--overlay1); }
+.nt-foot.is-error, .nt-message { color: var(--peach); }
+.nt-message { font: 700 28px/1.3 var(--font); }
+
+/* ---- House in LCARS: thermostat x 190 to 750, cameras x 774 to 1880, both y 346 to 1000 ---- */
+html.theme-lcars .module.house-climate { left: 190px; top: 346px; width: 560px; height: 654px; }
+html.theme-lcars .module.house-cameras { left: 774px; top: 346px; width: 1106px; height: 654px; }
+html.theme-lcars .nest-thermostat {
+  --nt-heat: var(--lc-peach);
+  --nt-cool: var(--lc-sky);
+  --nt-range: var(--lc-lilac);
+  --nt-eco: var(--lc-tan);
+  --nt-off: var(--lc-red);
+  gap: 16px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font-family: var(--lc-font);
+  text-transform: uppercase;
+}
+html.theme-lcars .nt-head {
+  height: 44px;
+  box-sizing: border-box;
+  align-items: flex-end;
+  padding: 0 28px 6px 16px;
+  border-radius: 0 22px 22px 0;
+  background: var(--lc-orange);
+}
+html.theme-lcars .nt-title { font: 700 34px/1 var(--lc-font); letter-spacing: 0.04em; color: #000; }
+html.theme-lcars .nt-status { padding: 0; border-radius: 0; background: none; font: 400 30px/1 var(--lc-font); letter-spacing: 0.06em; color: #000; }
+html.theme-lcars .nest-thermostat.is-offline .nt-status { box-shadow: none; color: #000; }
+html.theme-lcars .nest-thermostat.is-heating .nt-head { background: var(--nt-heat); }
+html.theme-lcars .nest-thermostat.is-cooling .nt-head { background: var(--nt-cool); }
+html.theme-lcars .nest-thermostat.is-offline .nt-head { background: var(--lc-red); }
+html.theme-lcars .nest-thermostat.is-eco .nt-head { background: var(--nt-eco); }
+
+html.theme-lcars .nt-now { flex-direction: row; align-items: flex-end; gap: 24px; padding-left: 4px; }
+html.theme-lcars .nt-ambient { font: 700 200px/0.85 var(--lc-font); letter-spacing: 0; color: #fff; }
+html.theme-lcars .nt-now-sub { padding-bottom: 8px; font: 400 30px/1.15 var(--lc-font); letter-spacing: 0.06em; color: var(--lc-periwinkle); }
+
+html.theme-lcars .nt-targets { gap: 10px; }
+html.theme-lcars .nt-target {
+  grid-template-columns: 128px 1fr 128px;
+  gap: 8px;
+  height: 128px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+html.theme-lcars .nt-target-mid {
+  height: 128px;
+  justify-content: center;
+  box-shadow: inset 0 0 0 2px rgba(204, 153, 204, 0.4);
+}
+html.theme-lcars .nt-target-label { font: 400 26px/1 var(--lc-font); letter-spacing: 0.06em; color: var(--lc-periwinkle); }
+html.theme-lcars .nt-target-value { font: 700 88px/0.95 var(--lc-font); color: var(--lc-gold); }
+/* The step buttons draw their − and + as bars (Antonio has no minus sign) */
+html.theme-lcars .nt-step {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  border-radius: 0;
+  font-size: 0;
+  color: transparent;
+}
+html.theme-lcars .nt-step::before,
+html.theme-lcars .nt-plus::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 40px;
+  height: 10px;
+  margin: -5px 0 0 -20px;
+  background: #000;
+}
+html.theme-lcars .nt-plus::after { width: 10px; height: 40px; margin: -20px 0 0 -5px; }
+html.theme-lcars .nt-minus { border-radius: 64px 0 0 64px; }
+html.theme-lcars .nt-plus  { border-radius: 0 64px 64px 0; }
+html.theme-lcars .nt-off { padding: 30px 0; font: 400 34px/1.1 var(--lc-font); letter-spacing: 0.06em; color: var(--lc-red); }
+
+html.theme-lcars .nt-modes { flex-wrap: nowrap; gap: 8px; }
+html.theme-lcars .nt-mode {
+  flex: 1 1 auto;               /* width follows the label, so HEAT·COOL fits */
+  min-width: 0;
+  height: 60px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 0 12px 6px;
+  border-radius: 0;
+  background: #000;
+  font: 400 30px/1 var(--lc-font);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;    /* buttons do not inherit it */
+  white-space: nowrap;
+}
+html.theme-lcars .nt-mode:first-child { border-radius: 30px 0 0 30px; padding-left: 26px; }
+html.theme-lcars .nt-mode:last-child  { border-radius: 0 30px 30px 0; padding-right: 26px; }
+html.theme-lcars .nt-mode.is-active { background: var(--nt-pill); color: #000; }
+html.theme-lcars .nest-thermostat button:active { transform: none; filter: brightness(1.3); }
+
+html.theme-lcars .nt-foot { font: 400 24px/1 var(--lc-font); letter-spacing: 0.06em; color: var(--lc-lilac); }
+html.theme-lcars .nt-foot.is-error, html.theme-lcars .nt-message { color: var(--lc-red); }
+html.theme-lcars .nt-message { font: 400 32px/1.2 var(--lc-font); letter-spacing: 0.04em; }
+
+
+/* ==========================================================
+   HOUSE PAGE: CAMERAS (MMM-NestCameras, class house-cameras). Every theme; LCARS block below.
+   DOM (from the module):
+     .nest-cams(.is-live|.is-paused|.has-message)
+       .nc-head > .nc-title + .nc-status            ("Doors · cameras" / "Live · 3", "Connecting", "Paused")
+       .nc-grid[data-count=N] > .nc-tile.nc-doorbell|.nc-camera(.is-featured .is-live .is-connecting
+                                .is-error .has-overlay)
+                                > video.nc-video, .nc-label > .nc-name + .nc-state, .nc-overlay
+       .nc-message                                   (no cameras / sign-in error)
+   Layout: the featured feed fills the left 2/3 (both rows); the others stack in the right column.
+   Video is letterboxed (contain), so nothing at the edge of a camera's view is cut off.
+   ========================================================== */
+.house-cameras .module-content { height: 100%; }
+.nest-cams {
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 26px 32px 28px;
+  border-radius: 23px;
+  background: var(--mantle);
+  font-family: var(--font);
+}
+.nc-head { display: flex; align-items: center; justify-content: space-between; }
+.nc-title { font: 800 36px/1.1 var(--font); color: var(--text); }
+.nc-status {
+  padding: 6px 18px;
+  border-radius: 999px;
+  background: var(--surface0);
+  font: 800 22px/1.2 var(--font);
+  color: var(--subtext0);
+}
+.nest-cams.is-live .nc-status   { background: var(--green); color: var(--ink); }
+.nest-cams.is-paused .nc-status { background: var(--peach); color: var(--ink); }
+
+.nc-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 16px;
+}
+.nc-grid[data-count="1"] { grid-template-columns: 1fr; }
+.nc-grid[data-count="0"] { display: none; }
+.nc-tile {
+  position: relative;
+  grid-column: 2;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--crust);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.nc-tile.is-featured { grid-column: 1; grid-row: 1 / span 2; }
+.nc-grid[data-count="1"] .nc-tile.is-featured { grid-row: auto; }
+.nc-grid[data-count="2"] .nc-tile:not(.is-featured) { grid-row: 1 / span 2; }
+.nc-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+.nc-label {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--crust) 78%, transparent);
+  font: 800 22px/1.2 var(--font);
+  color: var(--text);
+}
+.nc-state:empty { display: none; }
+.nc-state { font-size: 18px; color: var(--subtext0); }
+.nc-tile.is-live .nc-state { color: var(--green); }
+.nc-tile.is-live .nc-state::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.nc-tile.is-featured .nc-label { font-size: 28px; }
+.nc-overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  font: 700 26px/1.3 var(--font);
+  color: var(--subtext0);
+}
+.nc-tile.has-overlay .nc-overlay { display: flex; }
+.nc-tile.is-error .nc-overlay { color: var(--peach); }
+.nc-message { display: none; font: 700 28px/1.3 var(--font); color: var(--peach); }
+.nest-cams.has-message .nc-message { display: block; }
+
+/* ---- Cameras in LCARS: x 774 to 1880, y 346 to 1000. Lilac header bar, black feeds with a
+   coloured tab in the corner (doorbell orange, cameras sky); the featured feed has an orange frame. ---- */
+html.theme-lcars .nest-cams {
+  gap: 16px;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font-family: var(--lc-font);
+  text-transform: uppercase;
+}
+html.theme-lcars .nc-head {
+  height: 44px;
+  box-sizing: border-box;
+  align-items: flex-end;
+  padding: 0 28px 6px 16px;
+  border-radius: 0 22px 22px 0;
+  background: var(--lc-lilac);
+}
+html.theme-lcars .nc-title  { font: 700 34px/1 var(--lc-font); letter-spacing: 0.04em; color: #000; }
+html.theme-lcars .nc-status,
+html.theme-lcars .nest-cams.is-live .nc-status,
+html.theme-lcars .nest-cams.is-paused .nc-status { padding: 0; border-radius: 0; background: none; font: 400 30px/1 var(--lc-font); letter-spacing: 0.06em; color: #000; }
+html.theme-lcars .nest-cams.is-paused .nc-head { background: var(--lc-peach); }
+html.theme-lcars .nc-grid { gap: 8px; }
+html.theme-lcars .nc-tile {
+  --nc-tone: var(--lc-sky);
+  border-radius: 0;
+  background: #000;
+  box-shadow: inset 0 0 0 2px rgba(204, 153, 204, 0.4);
+}
+html.theme-lcars .nc-tile.nc-doorbell { --nc-tone: var(--lc-orange); }
+html.theme-lcars .nc-video { inset: 2px; width: calc(100% - 4px); height: calc(100% - 4px); }
+html.theme-lcars .nc-tile.is-featured { box-shadow: inset 0 0 0 4px var(--lc-orange); }
+html.theme-lcars .nc-tile.is-featured .nc-video { inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); }
+html.theme-lcars .nc-label,
+html.theme-lcars .nc-tile.is-featured .nc-label {
+  left: 0;
+  top: 0;
+  bottom: auto;
+  height: 40px;
+  box-sizing: border-box;
+  align-items: flex-end;
+  gap: 14px;
+  padding: 0 24px 5px 14px;
+  border-radius: 0 0 20px 0;
+  background: var(--nc-tone);
+  font: 700 30px/1 var(--lc-font);
+  letter-spacing: 0.04em;
+  color: #000;
+}
+html.theme-lcars .nc-state,
+html.theme-lcars .nc-tile.is-live .nc-state { font: 400 24px/1 var(--lc-font); letter-spacing: 0.06em; color: #000; }
+html.theme-lcars .nc-tile.is-live .nc-state::before { background: #000; border-radius: 0; width: 10px; height: 10px; }
+html.theme-lcars .nc-overlay { font: 400 32px/1.15 var(--lc-font); letter-spacing: 0.06em; color: var(--lc-periwinkle); }
+html.theme-lcars .nc-tile.is-error .nc-overlay { color: var(--lc-red); }
+html.theme-lcars .nc-message { font: 400 34px/1.2 var(--lc-font); letter-spacing: 0.04em; color: var(--lc-red); }
+
+
+/* ---- Doorbell alert (MMM-NestCameras .is-alert): banner under the header, ringing feed framed.
+   Shared rules: a peach banner that pulses gently. LCARS block: red alert, the bar blinks. ---- */
+.nc-alert { display: none; }
+.nest-cams.is-alert .nc-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 22px;
+  border-radius: 14px;
+  background: var(--peach);
+  font: 800 30px/1.1 var(--font);
+  color: var(--ink);
+  animation: nc-pulse 1.6s ease-in-out infinite;
+}
+.nc-alert-when { font-size: 24px; font-weight: 700; }
+.nc-tile.is-ringing { box-shadow: 0 0 0 4px var(--peach); }
+@keyframes nc-pulse { 50% { filter: brightness(1.12); } }
+
+html.theme-lcars .nest-cams.is-alert .nc-head { background: var(--lc-red); }
+html.theme-lcars .nest-cams.is-alert .nc-alert {
+  height: 52px;
+  box-sizing: border-box;
+  align-items: flex-end;
+  padding: 0 28px 6px 16px;
+  border-radius: 26px 0 0 26px;
+  background: var(--lc-red);
+  font: 700 40px/1 var(--lc-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #000;
+  animation: nc-red-alert 1s steps(1, end) infinite;
+}
+html.theme-lcars .nc-alert-when { font: 400 32px/1 var(--lc-font); }
+html.theme-lcars .nc-tile.is-ringing,
+html.theme-lcars .nc-tile.is-featured.is-ringing { box-shadow: inset 0 0 0 4px var(--lc-red); }
+html.theme-lcars .nc-tile.nc-doorbell.is-ringing { --nc-tone: var(--lc-red); }
+@keyframes nc-red-alert { 50% { background: #000; color: var(--lc-red); box-shadow: inset 0 0 0 3px var(--lc-red); } }
+
+/* ==========================================================
+   FORECAST PAGE (hidden page "weather"): daily on the left, hourly on the right. Every theme.
+   Built-in weather module. Class names inside the module are from the docs' file names
+   (forecast.njk / hourly.njk): confirm in DevTools on the Pi and adjust the inner rules.
+   ========================================================== */
+.module.weather-daily, .module.weather-hourly {
+  position: fixed !important;
+  margin: 0 !important;
+  top: 160px;
+  height: 840px;
+  width: 900px;
+  box-sizing: border-box;
+  padding: 26px 32px 22px;
+  border-radius: 23px;
+  background: var(--mantle);
+  font-family: var(--font);
+  color: var(--text);
+  text-align: left;
+  overflow: hidden;
+}
+.module.weather-daily  { left: 48px;   width: 1040px; }   /* daily needs the room: 5 columns */
+.module.weather-hourly { left: 1112px; width: 760px; }    /* 48 + 1040 + 24 gap; ends at x 1872 */
+.weather-daily .module-header, .weather-hourly .module-header {
+  font: 800 44px/1.1 var(--font);
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-bottom: 18px;
+  border: 0;
+}
+.weather-daily .bright, .weather-hourly .bright { color: var(--text) !important; }
+.weather-daily .dimmed, .weather-hourly .dimmed { color: var(--subtext0) !important; }
+/* The forecast and hourly views are CSS grids now (not tables), and the module sets small text sizes
+   with its own classes (.small, .xsmall ...). So: set the size on the content box, make every
+   size class inside inherit it, and open the gaps between columns and rows (gap only affects
+   grid / flex boxes, so it is safe on every div). Sizes: 7 daily rows and 12 hourly rows fill the
+   840px card. */
+.weather-daily .module-content, .weather-hourly .module-content { line-height: 1.15; }
+.weather-daily .module-content  { font-size: 42px; }
+.weather-hourly .module-content { font-size: 36px; }
+.weather-daily :is(.xsmall, .small, .medium, .normal, .large, .xlarge),
+.weather-hourly :is(.xsmall, .small, .medium, .normal, .large, .xlarge) { font-size: inherit !important; line-height: inherit !important; }
+.weather-daily .module-content div  { column-gap: 36px; row-gap: 26px; }
+.weather-hourly .module-content div { column-gap: 90px; row-gap: 12px; }
+.weather-daily .wi, .weather-hourly .wi { font-size: 1.1em; }
+
+/* LCARS: same split under the frame, x 190 to 1880, y 346 to 1000 */
+html.theme-lcars .module.weather-daily, html.theme-lcars .module.weather-hourly {
+  top: 346px; height: 654px; width: 836px; border-radius: 0; background: #000;
+  font-family: var(--lc-font);
+}
+html.theme-lcars .module.weather-daily  { left: 190px;  width: 960px; }
+html.theme-lcars .module.weather-hourly { left: 1174px; width: 706px; }   /* 190 + 960 + 24 gap; ends at x 1880 */
+html.theme-lcars .weather-daily .module-header, html.theme-lcars .weather-hourly .module-header {
+  font: 400 40px/1.1 var(--lc-font); text-transform: uppercase; letter-spacing: 0.06em; color: var(--lc-orange);
+}
+html.theme-lcars .weather-daily .module-content  { font-size: 38px; text-transform: uppercase; }
+html.theme-lcars .weather-hourly .module-content { font-size: 30px; text-transform: uppercase; }
+html.theme-lcars .weather-daily .module-content div  { row-gap: 18px; }
+html.theme-lcars .weather-hourly .module-content div { row-gap: 6px; }
+
+/* ==========================================================
+   WEATHER CLOSE BUTTON (MMM-WeatherNav): on the forecast page only, bottom right, left of the
+   theme button. Same 56px finger size and look as the theme button. The module is in
+   `.region.bottom.right`, already raised to z-index 100 for taps.
+   ========================================================== */
+.module.weather-close {
+  position: fixed !important;
+  margin: 0 !important;
+  right: 130px;
+  bottom: 8px;
+  z-index: 100;
+}
+.wn-close {
+  height: 56px;
+  padding: 0 28px 0 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 2px solid var(--surface0);
+  border-radius: 999px;
+  background: var(--mantle);
+  color: var(--text);
+  font: 800 24px/1 var(--font);
+  cursor: pointer !important;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease;
+}
+.wn-close:active { transform: scale(0.95); }
+.wn-close:focus { outline: none; }
+.wn-close .wn-x { font-size: 34px; line-height: 1; color: var(--accent); }
+/* LCARS: square orange block in the title row, left of the weather chip (the bottom bar is full). Not yet seen. */
+html.theme-lcars .module.weather-close { top: 264px; bottom: auto; right: 270px; }   /* left of the chip, same row */
+html.theme-lcars .wn-close {
+  border: 0; border-radius: 0; background: var(--lc-orange); color: #000;
+  font: 400 30px/1 var(--lc-font); text-transform: uppercase; letter-spacing: 0.04em;
+}
+html.theme-lcars .wn-close .wn-x { color: #000; }
