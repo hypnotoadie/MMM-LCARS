@@ -80,7 +80,7 @@ Tap a pill to hide that calendar everywhere (the pill dims and its name is cross
 |---|---|
 | `config.js` | The MagicMirror config: every page and module. Edit the **CHANGE ME** spots. |
 | `custom.css` | The whole LCARS look. |
-| `fonts/` | Antonio (the LCARS-style typeface) and its licence. |
+| `fonts/` | Antonio (the LCARS-style typeface) and its license. |
 | `MMM-LCARSFrame/` | The LCARS frame: elbows, bars, page names, info panel. Tap the header elbow to go home. |
 | `MMM-Landing/` | The home screen tiles. |
 | `MMM-CalendarFilter/` | The tappable calendar pills. |
@@ -283,4 +283,4 @@ curl http://localhost:8080/api/notification/HOME_PAGE      # back
 
 ## License
 
-[MIT](LICENSE) The Antonio font keeps its own licence (SIL Open Font License 1.1, `fonts/Antonio-OFL.txt`), and each third-party module keeps its own licence in its repo.
+[MIT](LICENSE) The Antonio font keeps its own license (SIL Open Font License 1.1, `fonts/Antonio-OFL.txt`), and each third-party module keeps its own license in its repo.
