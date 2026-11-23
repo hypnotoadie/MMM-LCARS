@@ -123,19 +123,19 @@ On the Pi:
 ```bash
 # 1. Get this repo
 cd ~
-git clone https://github.com/<your-account>/LCARS_MMM.git
+git clone https://github.com/<your-account>/MMM-LCARS.git
 
 # 2. Link the custom modules into MagicMirror
 for m in MMM-LCARSFrame MMM-Landing MMM-CalendarFilter MMM-WeatherNav \
          MMM-ThemeSwitcher MMM-NestThermostat MMM-NestCameras; do
-  ln -sT ~/LCARS_MMM/$m ~/MagicMirror/modules/$m
+  ln -sT ~/MMM-LCARS/$m ~/MagicMirror/modules/$m
 done
 
 # 3. Config, CSS and font (back up your own config.js first if you have one)
-cp ~/LCARS_MMM/config.js  ~/MagicMirror/config/config.js
-cp ~/LCARS_MMM/custom.css ~/MagicMirror/config/custom.css
+cp ~/MMM-LCARS/config.js  ~/MagicMirror/config/config.js
+cp ~/MMM-LCARS/custom.css ~/MagicMirror/config/custom.css
 mkdir -p ~/MagicMirror/css/fonts
-cp ~/LCARS_MMM/fonts/Antonio-VariableFont_wght.ttf ~/MagicMirror/css/fonts/
+cp ~/MMM-LCARS/fonts/Antonio-VariableFont_wght.ttf ~/MagicMirror/css/fonts/
 
 # 4. Check and restart
 cd ~/MagicMirror && npm run config:check

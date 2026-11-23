@@ -1,0 +1,22 @@
+# Credentials: keep these on the Pi only, never in git
+nest.secrets.json
+*.secrets.json
+secret/
+.env
+.env.*
+
+# Your own working copy of the config (keep config.js as the clean template)
+config.local.js
+*.bak-*
+
+# Node and editor clutter
+node_modules/
+npm-debug.log*
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
