@@ -124,7 +124,7 @@ On the Pi:
 ```bash
 # 1. Get this repo
 cd ~
-git clone https://github.com/<your-account>/MMM-LCARS.git
+git clone https://github.com/hypnotoadie/MMM-LCARS.git
 
 # 2. Link the custom modules into MagicMirror
 for m in MMM-LCARSFrame MMM-Landing MMM-CalendarFilter MMM-WeatherNav MMM-PhotoWake \
