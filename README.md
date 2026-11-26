@@ -85,6 +85,7 @@ Tap a pill to hide that calendar everywhere (the pill dims and its name is cross
 | `MMM-Landing/` | The home screen tiles. |
 | `MMM-CalendarFilter/` | The tappable calendar pills. |
 | `MMM-WeatherNav/` | Opens and closes the forecast page from the weather chip. |
+| `MMM-PhotoWake/` | Tap the photo slideshow to go back to the home screen. Optional idle screensaver (`idleMinutes`). |
 | `MMM-ThemeSwitcher/` | Puts the `theme-lcars` class on the page, which every LCARS style depends on. Keep it. |
 | `MMM-NestThermostat/` | Nest thermostat panel (Google Smart Device Management API). |
 | `MMM-NestCameras/` | Nest camera and doorbell feeds (WebRTC, same API). |
@@ -126,7 +127,7 @@ cd ~
 git clone https://github.com/<your-account>/MMM-LCARS.git
 
 # 2. Link the custom modules into MagicMirror
-for m in MMM-LCARSFrame MMM-Landing MMM-CalendarFilter MMM-WeatherNav \
+for m in MMM-LCARSFrame MMM-Landing MMM-CalendarFilter MMM-WeatherNav MMM-PhotoWake \
          MMM-ThemeSwitcher MMM-NestThermostat MMM-NestCameras; do
   ln -sT ~/MMM-LCARS/$m ~/MagicMirror/modules/$m
 done
