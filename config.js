@@ -85,7 +85,7 @@ let config = {
   // CHANGE ME: localhost only. To reach the mirror from another PC, add its address in both forms,
   // e.g. "192.168.1.50", "::ffff:192.168.1.50", and give that PC a fixed address in your router.
   //ipWhitelist: ["127.0.0.1", "::ffff:127.0.0.1", "::1"],
-  ipWhitelist: [] // uncomment to allow all IP addresses (anyone on the network can reach the mirror). Good for testing, but not secure. Use a whitelist in production.
+  ipWhitelist: [], // uncomment to allow all IP addresses (anyone on the network can reach the mirror). Good for testing, but not secure. Use a whitelist in production.
   language: "en",
   locale: "en-US",
   timeFormat: 12,
@@ -107,12 +107,13 @@ let config = {
         // CHANGE ME: your iCal feeds. In Google Calendar: Settings > (calendar) > "Secret address
         // in iCal format". Treat these URLs like passwords: keep the real ones out of git.
         calendars: [
-          { name: "Family", url: "https:://<CALENDAR PROVIDER>/YOUR_FAMILY_CALENDAR_ID/private-YOUR_TOKEN/basic.ics" },
+          { name: "Family", url: "https://<CALENDAR PROVIDER>/YOUR_FAMILY_CALENDAR_ID/private-YOUR_TOKEN/basic.ics" },
           { name: "Parent1", url: "https://<CALENDAR PROVIDER>/YOUR_CALENDAR_ID/private-YOUR_TOKEN/basic.ics" },
           { name: "Parent2", url: "https://<CALENDAR PROVIDER>/YOUR_ID/YOUR_TOKEN/calendar.ics" },
           { name: "Kids", url: "https://<CALENDAR PROVIDER>/YOUR_KIDS_CALENDAR_ID/private-YOUR_TOKEN/basic.ics" }
         ]
-      },
+      }
+    },
 
     /* ---- Landing screen (page 0, the home screen) ----
        One tile per page; a tap sends PAGE_SELECT <page> or SHOW_HIDDEN_PAGE <name>.
@@ -544,6 +545,19 @@ let config = {
         transitionImages: true,
         randomizeImageOrder: true,
         backgroundSize: "cover"
+      }
+    },
+    /* Tap anywhere on the slideshow to go back to the landing screen (MMM-PhotoWake, custom module
+       in this repo). Class page-photos: shown only on the photos page, where it lays a transparent
+       full-screen layer over the photos. idleMinutes > 0 also starts the slideshow after that many
+       minutes without a tap (0 = off). */
+    {
+      module: "MMM-PhotoWake",
+      position: "fullscreen_above",
+      classes: "photo-wake page-photos",
+      config: {
+        wakeNotification: "HOME_PAGE",   // "LEAVE_HIDDEN_PAGE" = back to the page you came from instead
+        idleMinutes: 0
       }
     },
 
